@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Socio Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0f1e;--panel:#151830;--panel2:#1c2040;--line:#262b52;--txt:#eef0ff;--mut:#8b90b8;--a:#7c5cff;--g:linear-gradient(135deg,#7c5cff,#ff5c9d);--in:#20264d;--bad:#ff8fa8;--ok:#3ddc97}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--txt);font-size:14px}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+input{font:inherit;font-size:16px;color:var(--txt);background:var(--in);border:1px solid transparent;border-radius:12px;padding:11px 14px;width:100%;outline:none}input:focus{border-color:var(--a)}
+.hide{display:none!important}.sub{color:var(--mut);font-size:12px}
+.logo{font-size:22px;font-weight:700;letter-spacing:-1px}.logo span{background:var(--g);-webkit-background-clip:text;background-clip:text;color:transparent}.logo small{font-size:11px;color:var(--mut);letter-spacing:0;margin-left:6px;font-weight:600}
+.btn{background:var(--g);border-radius:12px;padding:11px 16px;font-weight:600}.btn.gh{background:var(--in)}.btn.dg{background:#ff5c7a22;color:var(--bad)}.btn.sm{padding:7px 12px;font-size:12px;border-radius:10px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:24px;display:grid;gap:12px;width:100%;max-width:400px}
+#auth{min-height:100vh;display:grid;place-items:center;padding:20px}.err{color:var(--bad);font-size:13px;min-height:16px}
+header{position:sticky;top:0;z-index:5;background:var(--panel);border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:10px 16px}
+nav{display:flex;gap:4px;flex:1;overflow-x:auto}nav button{padding:8px 14px;border-radius:10px;color:var(--mut);font-weight:600}nav button.on{background:var(--in);color:var(--txt)}
+#qw{width:220px}
+main{max-width:980px;margin:0 auto;padding:16px;display:grid;gap:12px}
+.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}.stat{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px}.stat b{font-size:26px;display:block}.stat span{color:var(--mut);font-size:12px}
+.sec{color:var(--mut);font-size:12px;font-weight:600;margin-top:6px}
+.row{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 12px}.row.click{cursor:pointer}.row.click:hover{background:var(--panel2)}
+.row .t{flex:1;min-width:0}.row .t b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.av{width:42px;height:42px;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:700;color:#fff;overflow:hidden}.av img{width:100%;height:100%;object-fit:cover}.av.big{width:84px;height:84px;font-size:32px}
+.th{width:54px;height:54px;border-radius:10px;background:var(--in);flex:none;overflow:hidden;display:grid;place-items:center;color:var(--mut);font-size:11px}.th img{width:100%;height:100%;object-fit:cover}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chip{padding:6px 12px;border-radius:20px;background:var(--in);color:var(--mut);font-size:12px;font-weight:600}.chip.on{background:var(--g);color:#fff}
+.tag{font-size:10px;font-weight:700;border-radius:8px;padding:2px 7px;margin-left:6px;background:var(--in);color:var(--mut)}.tag.bad{background:#ff5c7a22;color:var(--bad)}
+.vt{display:inline-flex;vertical-align:-3px;margin-left:4px;width:15px;height:15px}.vt svg{width:100%;height:100%}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--ok);flex:none}
+#dlg{position:fixed;inset:0;background:#000b;display:grid;place-items:center;padding:16px;z-index:20}#dc{max-width:560px;max-height:92vh;overflow-y:auto}
+.head{display:grid;justify-items:center;gap:4px;text-align:center}.info{display:grid;grid-template-columns:1fr 1fr;gap:8px}.info div{background:var(--in);border-radius:12px;padding:8px 12px;min-width:0;overflow:hidden;text-overflow:ellipsis}.info small{display:block;color:var(--mut);font-size:11px}
+.acts{display:flex;flex-wrap:wrap;gap:8px}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--line);padding:10px 16px;border-radius:20px;z-index:50}
+.empty{color:var(--mut);text-align:center;padding:30px}
+.adstage{position:relative;width:300px;height:533px;margin:0 auto;border-radius:20px;overflow:hidden;border:1px solid var(--line);touch-action:none;background:#151830}
+.adel{position:absolute;transform:translate(-50%,-50%);cursor:grab;user-select:none;text-align:center;max-width:88%;line-height:1.3;white-space:pre-wrap;z-index:1}
+.adel.btnel{white-space:nowrap;box-shadow:0 6px 18px #0006}
+.adel.sel{outline:2px dashed #fff;outline-offset:5px}
+.adtools{display:flex;gap:8px;flex-wrap:wrap}
+.adpanel{background:var(--in);border-radius:14px;padding:14px;display:grid;gap:10px}
+.swrow2{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+input[type=color]{width:40px;height:32px;padding:2px;border-radius:8px;cursor:pointer;background:var(--panel)}
+input[type=range]{accent-color:var(--a)}
+</style>
+</head>
+<body>
+<section id="auth" class="hide"><div class="card">
+  <div class="logo">soci<span>o</span><small>ADMIN</small></div>
+  <div class="sub" id="asub"></div>
+  <input id="nm" class="hide" placeholder="Your name" autocomplete="name">
+  <input id="em" type="email" placeholder="Email" autocomplete="email">
+  <input id="pw" type="password" placeholder="Password" autocomplete="current-password">
+  <input id="ic" class="hide" placeholder="Invite code (empty if you're the first admin)" autocapitalize="characters" autocomplete="off" spellcheck="false">
+  <div class="err" id="err"></div>
+  <button class="btn" id="go">Sign in</button>
+  <button class="btn gh" id="goog">Continue with Google</button>
+  <button class="sub" id="swap" style="text-align:center"></button>
+</div></section>
+<section id="app" class="hide">
+  <header><div class="logo">soci<span>o</span><small>ADMIN</small></div><nav id="nav"></nav><div id="qw" class="hide"><input id="q" placeholder="Search…"></div><button class="btn gh sm" id="out">Sign out</button></header>
+  <main id="main"></main>
+</section>
+<div id="dlg" class="hide"><div class="card" id="dc"></div></div>
+<div id="toast" class="hide"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, deleteUser, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+import { getDatabase, ref, onValue, push, set, update, remove, get, query, limitToLast, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+const app = initializeApp({ apiKey: "AIzaSyA2N6Ku_z1eu4M-6ROgr07RNiXOgBnoo4E", authDomain: "chatbro-b8cde.firebaseapp.com", databaseURL: "https://chatbro-b8cde-default-rtdb.firebaseio.com", projectId: "chatbro-b8cde", storageBucket: "chatbro-b8cde.firebasestorage.app", messagingSenderId: "867020468309", appId: "1:867020468309:web:1ee8a6a501fb798c88a4dc" }, "admin");
+const auth = getAuth(app), db = getDatabase(app);
+const $ = s => document.querySelector(s), h = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+const hue = s => { let n = 0; for (const c of s || "?") n = (n * 31 + c.charCodeAt(0)) % 360; return n; };
+const av = (u, cls) => { const d = h("div", "av" + (cls ? " " + cls : "")); d.style.background = `linear-gradient(135deg,hsl(${hue(u.name)} 70% 55%),hsl(${(hue(u.name) + 50) % 360} 70% 45%))`; if (u.photo) { const i = document.createElement("img"); i.src = u.photo; i.alt = ""; i.referrerPolicy = "no-referrer"; d.append(i); } else d.textContent = (u.name || "?")[0].toUpperCase(); return d; };
+const vt = () => { const s = h("span", "vt"); s.innerHTML = '<svg viewBox="0 0 24 24"><g fill="#3897f0"><rect x="4" y="4" width="16" height="16" rx="4.5"/><rect x="4" y="4" width="16" height="16" rx="4.5" transform="rotate(45 12 12)"/></g><path d="M8.2 12.3l2.6 2.6 5-5.2" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'; return s; };
+const ago = t => { const n = (Date.now() - (t || Date.now())) / 1000; return n < 60 ? "just now" : n < 3600 ? Math.floor(n / 60) + "m ago" : n < 86400 ? Math.floor(n / 3600) + "h ago" : new Date(t).toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" }); };
+const toast = t => { const e = $("#toast"); e.textContent = t; e.classList.remove("hide"); clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.add("hide"), 2600); };
+
+let AD = {}, INV = {}, me, U = {}, V = {}, B = {}, P = {}, S = {}, G = {}, LOG = {}, FC = {}, ADS = {}, ADV = {}, tab = "over", flt = "all", dlgId = null, adEditId = null, adBg = null, adEls = [], adSelId = null, unsubs = [], rq;
+const nm = id => (U[id] || {}).name || (U[id] || {}).email || id || "Unknown";
+const log = (a, t) => push(ref(db, "adminLog"), { by: me.uid, a, t: t || null, ts: serverTimestamp() }).catch(() => {});
+const TABS = [["over", "Overview"], ["users", "Users"], ["posts", "Posts"], ["groups", "Groups"], ["ads", "Ads"], ["team", "Team"]];
+function pickImgFile(cb) {
+  const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*";
+  inp.onchange = () => { const f = inp.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => cb(r.result); r.readAsDataURL(f); };
+  inp.click();
+}
+
+/* ---------- auth + admin sign-up ---------- */
+let signup = false, signing = false, myRole = "admin";
+const setMode = s => { signup = s; ["#nm", "#ic"].forEach(q => $(q).classList.toggle("hide", !s)); $("#go").textContent = s ? "Create admin account" : "Sign in";
+  $("#swap").innerHTML = s ? "Already an admin? <b>Sign in</b>" : "Need an admin account? <b>Create one</b>";
+  $("#asub").textContent = s ? "Got an invite code from an owner? Enter it below. If no admin exists yet, leave it empty and you'll become the owner." : "Sign in with an admin account."; $("#err").textContent = ""; };
+$("#swap").onclick = () => setMode(!signup); setMode(false);
+const nice = e => (e.code || e.message || "Something went wrong").replace("auth/", "").replace(/-/g, " ");
+async function redeem(u, name, code, created) {
+  try {
+    if (code) {
+      const iv = (await get(ref(db, "adminInvites/" + code))).val();
+      if (!iv) throw new Error("That invite code isn't valid."); if (iv.used) throw new Error("That invite code was already used."); if (iv.exp < Date.now()) throw new Error("That invite code has expired.");
+      await update(ref(db), { ["admins/" + u.uid]: { role: "admin", name, email: u.email || "", invite: code, ts: serverTimestamp() }, [`adminInvites/${code}/used`]: true, [`adminInvites/${code}/usedBy`]: u.uid });
+    } else await set(ref(db, "admins/" + u.uid), { role: "owner", name, email: u.email || "", ts: serverTimestamp() });
+  } catch (e) {
+    if (created) await deleteUser(u).catch(() => {}); await signOut(auth).catch(() => {});
+    throw new Error(/permission/i.test((e.code || "") + e.message) ? (code ? "Couldn't use that code." : "An admin already exists — ask an owner for an invite code.") : e.message);
+  }
+}
+async function signUpFlow(getUser, name, code) {
+  signing = true; $("#err").textContent = "";
+  try { const { user, created } = await getUser(); await redeem(user, name || user.displayName || "Admin", code, created); signing = false; await gate(user); }
+  catch (e) { $("#err").textContent = e.code ? nice(e) : e.message; } finally { signing = false; }
+}
+$("#go").onclick = () => {
+  const em = $("#em").value.trim(), pw = $("#pw").value, name = $("#nm").value.trim(), code = $("#ic").value.trim().toUpperCase();
+  if (!signup) return signInWithEmailAndPassword(auth, em, pw).catch(e => $("#err").textContent = nice(e));
+  if (!name) return $("#err").textContent = "Enter your name.";
+  signUpFlow(async () => { try { return { user: (await createUserWithEmailAndPassword(auth, em, pw)).user, created: true }; } catch (e) { if (e.code !== "auth/email-already-in-use") throw e; return { user: (await signInWithEmailAndPassword(auth, em, pw)).user, created: false }; } }, name, code);
+};
+$("#goog").onclick = () => signup ? signUpFlow(async () => ({ user: (await signInWithPopup(auth, new GoogleAuthProvider())).user, created: false }), $("#nm").value.trim(), $("#ic").value.trim().toUpperCase())
+  : signInWithPopup(auth, new GoogleAuthProvider()).catch(e => $("#err").textContent = nice(e));
+$("#out").onclick = () => signOut(auth);
+onAuthStateChanged(auth, async u => {
+  if (signing) return;
+  unsubs.forEach(f => f()); unsubs = []; me = null; $("#dlg").classList.add("hide");
+  if (!u) { $("#app").classList.add("hide"); $("#auth").classList.remove("hide"); return; }
+  await gate(u);
+});
+async function gate(u) {
+  let v = null; try { v = (await get(ref(db, "admins/" + u.uid))).val(); } catch {}
+  if (!v) { $("#err").textContent = "This account isn't an admin yet. Choose “Create one” and enter an invite code. (uid: " + u.uid + ")"; await signOut(auth); $("#auth").classList.remove("hide"); return; }
+  myRole = v === true || v.role === "owner" ? "owner" : "admin"; me = u; $("#auth").classList.add("hide"); $("#app").classList.remove("hide"); start();
+}
+function start() {
+  const sub = (path, fn, q) => unsubs.push(onValue(q || ref(db, path), s => { fn(s.val() || {}); render(); }, e => toast("Can't read " + path + ": " + (e.code || e.message))));
+  sub("users", v => U = v); sub("verified", v => V = v); sub("banned", v => B = v); sub("posts", v => P = v); sub("stories", v => S = v); sub("groups", v => G = v);
+  sub("admins", v => AD = v); if (myRole === "owner") sub("adminInvites", v => INV = v);
+  sub("ads", v => ADS = v); sub("adViews", v => ADV = v);
+  sub("adminLog", v => LOG = v, query(ref(db, "adminLog"), limitToLast(25)));
+}
+const render = () => { cancelAnimationFrame(rq); rq = requestAnimationFrame(draw); };
+$("#q").oninput = render;
+
+/* ---------- views ---------- */
+function draw() {
+  if (!me) return;
+  $("#nav").innerHTML = ""; TABS.forEach(([k, l]) => { const b = h("button", tab === k ? "on" : "", l); b.onclick = () => { tab = k; $("#q").value = ""; render(); }; $("#nav").append(b); });
+  $("#qw").classList.toggle("hide", tab === "over" || tab === "team" || tab === "ads");
+  const M = $("#main"); M.innerHTML = ""; ({ over: vOver, users: vUsers, posts: vPosts, groups: vGroups, ads: vAds, team: vTeam })[tab](M);
+  if (dlgId) userDlg(dlgId);
+}
+const live = uid => Object.values(S[uid] || {}).filter(t => Date.now() - (t.ts || Date.now()) < 864e5).length;
+function vOver(M) {
+  const st = h("div", "stats"), n = k => Object.keys(k).length;
+  [["Users", n(U)], ["Online now", Object.values(U).filter(u => u.online).length], ["Blue ticks", Object.values(V).filter(Boolean).length], ["Suspended", n(B)], ["Posts", n(P)], ["Live stories", Object.keys(S).reduce((a, k) => a + live(k), 0)], ["Groups", n(G)]]
+    .forEach(([l, v]) => { const c = h("div", "stat"); c.append(h("b", "", String(v)), h("span", "", l)); st.append(c); });
+  M.append(st, h("div", "sec", "RECENT ADMIN ACTIVITY"));
+  const L = Object.values(LOG).sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  if (!L.length) M.append(h("div", "empty", "No admin actions yet."));
+  L.forEach(e => { const r = h("div", "row"), t = h("div", "t"); t.append(h("b", "", nm(e.by) + " " + e.a), h("div", "sub", (e.t ? "Target: " + nm(e.t) + " · " : "") + ago(e.ts))); r.append(t); M.append(r); });
+}
+function userRow(id, u) {
+  const r = h("div", "row click"), t = h("div", "t"), b = h("b", "", u.name || u.email || "Unknown");
+  if (V[id]) b.append(vt()); if (B[id]) b.append(h("span", "tag bad", "SUSPENDED"));
+  t.append(b, h("div", "sub", (u.username ? "@" + u.username + " · " : "") + (u.email || "")));
+  r.append(av(u), t); if (u.online) r.append(h("span", "dot")); r.onclick = () => userDlg(id); return r;
+}
+function vUsers(M) {
+  const chips = h("div", "chips"); [["all", "All"], ["verified", "Blue tick"], ["banned", "Suspended"], ["online", "Online"]].forEach(([k, l]) => { const c = h("button", "chip" + (flt === k ? " on" : ""), l); c.onclick = () => { flt = k; render(); }; chips.append(c); });
+  M.append(chips); const q = $("#q").value.trim().toLowerCase().replace(/^@/, "");
+  const L = Object.entries(U).filter(([id, u]) => (!q || [u.name, u.username, u.email, id].some(x => (x || "").toLowerCase().includes(q))) && (flt === "all" || (flt === "verified" && V[id]) || (flt === "banned" && B[id]) || (flt === "online" && u.online)))
+    .sort((a, b) => (+!!b[1].online) - (+!!a[1].online) || (a[1].name || "").localeCompare(b[1].name || ""));
+  if (!L.length) M.append(h("div", "empty", "No users match."));
+  L.slice(0, 200).forEach(([id, u]) => M.append(userRow(id, u))); if (L.length > 200) M.append(h("div", "empty", "Showing 200 of " + L.length + " — search to narrow down."));
+}
+function postRow(pid, p) {
+  const r = h("div", "row"), th = h("div", "th"), t = h("div", "t"), it = (p.media || (p.img ? [{ url: p.img, kind: "image" }] : []))[0], u = U[p.uid] || {}, b = h("b", "", nm(p.uid));
+  const src = it && (it.kind === "video" ? it.poster : it.url); if (src) { const i = document.createElement("img"); i.src = src; th.append(i); } else th.textContent = "text";
+  if (V[p.uid]) b.append(vt());
+  t.append(b, h("div", "sub", (p.text || "(no caption)").slice(0, 90)), h("div", "sub", `${Object.keys(p.likes || {}).length} likes · ${Object.keys(p.comments || {}).length} comments · ${ago(p.ts)}`));
+  const d = h("button", "btn dg sm", "Delete"); d.onclick = () => run(() => remove(ref(db, "posts/" + pid)), "deleted a post by", p.uid, "Delete this post?");
+  r.append(th, t, d); return r;
+}
+function vPosts(M) {
+  const q = $("#q").value.trim().toLowerCase();
+  const L = Object.entries(P).filter(([, p]) => !q || (p.text || "").toLowerCase().includes(q) || nm(p.uid).toLowerCase().includes(q)).sort((a, b) => (b[1].ts || 0) - (a[1].ts || 0));
+  if (!L.length) M.append(h("div", "empty", "No posts."));
+  L.slice(0, 100).forEach(([id, p]) => M.append(postRow(id, p)));
+}
+function vGroups(M) {
+  const q = $("#q").value.trim().toLowerCase();
+  const L = Object.entries(G).filter(([, g]) => !q || (g.name || "").toLowerCase().includes(q));
+  if (!L.length) M.append(h("div", "empty", "No groups."));
+  L.forEach(([id, g]) => { const r = h("div", "row"), t = h("div", "t"), d = h("button", "btn dg sm", "Delete"); t.append(h("b", "", g.name || "Group"), h("div", "sub", Object.keys(g.members || {}).length + " members · created by " + nm(g.createdBy)));
+    d.onclick = () => run(() => update(ref(db), { ["groups/" + id]: null, ["chats/" + id]: null }), "deleted group “" + g.name + "” by", g.createdBy, "Delete this group and its messages for everyone?"); r.append(av({ name: g.name, photo: g.photo }), t, d); M.append(r); });
+}
+
+/* ---------- ads (drag-and-drop, story-style editor) ---------- */
+function resetAdEditor() { adBg = { type: "color", c1: "#151830" }; adEls = []; adSelId = null; }
+function fontCss(f) {
+  return { serif: "Georgia,'Times New Roman',serif", mono: "ui-monospace,'SF Mono',Menlo,monospace", rounded: "ui-rounded,-apple-system,'Segoe UI',sans-serif",
+    condensed: "'Arial Narrow',Arial,sans-serif", impact: "Impact,Haettenschweiler,'Arial Narrow Bold',sans-serif", cursive: "'Brush Script MT','Segoe Script',cursive" }[f] || "'Sora',system-ui,sans-serif";
+}
+function loadImgMeta(dataUrl, cb) { const img = new Image(); img.onload = () => cb(img.naturalWidth / img.naturalHeight || 1); img.onerror = () => cb(1); img.src = dataUrl; }
+function bgStyle(node, bg) {
+  [...node.children].filter(c => c.classList && c.classList.contains("adbgimg")).forEach(c => c.remove());
+  if (bg && bg.type === "image" && bg.image) {
+    node.style.background = "#000"; const img = document.createElement("img"); img.className = "adbgimg";
+    img.src = bg.image; img.style.cssText = "position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0"; node.prepend(img);
+  } else if (bg && bg.type === "gradient") node.style.background = `linear-gradient(${bg.angle || 135}deg, ${bg.c1 || "#7c5cff"}, ${bg.c2 || "#ff5c9d"})`;
+  else node.style.background = (bg && bg.c1) || "#151830";
+}
+function elStyle(node, e) {
+  node.style.left = e.x + "%"; node.style.top = e.y + "%";
+  if (e.type === "image") {
+    node.style.maxWidth = "none"; node.style.width = (e.w || 140) + "px"; node.style.height = "auto"; node.style.aspectRatio = e.ar || 1;
+    node.style.borderRadius = (e.radius ?? 0) + "px"; node.style.objectFit = "cover"; node.style.cursor = e.link ? "pointer" : "grab"; return;
+  }
+  node.textContent = e.text || (e.type === "button" ? "Button" : "Text");
+  node.style.fontSize = (e.fs || 20) + "px"; node.style.fontWeight = e.weight || "400"; node.style.color = e.color || "#fff";
+  node.style.fontFamily = fontCss(e.font); node.style.textAlign = e.align || "center";
+  if (e.type === "button") {
+    const shape = e.shape || "rounded";
+    if (shape === "outline") { node.style.background = "transparent"; node.style.border = `2px solid ${e.bg || "#7c5cff"}`; }
+    else { node.style.background = e.bg || "#7c5cff"; node.style.border = "0"; }
+    node.style.borderRadius = shape === "pill" ? "999px" : shape === "square" ? "0px" : shape === "outline" ? "10px" : (e.radius ?? 12) + "px";
+  }
+}
+function chipRow(opts, value, onSet) {
+  const row = h("div", "chips"), btns = [];
+  opts.forEach(([v, l]) => { const c = h("button", "chip" + (value === v ? " on" : ""), l); c.dataset.v = v; c.onclick = () => { btns.forEach(x => x.classList.toggle("on", x.dataset.v === v)); onSet(v); }; btns.push(c); row.append(c); });
+  return row;
+}
+function staticPreview(ad, w, hh) {
+  const wrap = document.createElement("div"); wrap.style.cssText = `width:${w}px;height:${hh}px;position:relative;overflow:hidden;border-radius:10px;flex:none;background:var(--in)`;
+  bgStyle(wrap, ad.bg); const scale = w / 300;
+  Object.values(ad.elements || {}).forEach(e => {
+    const node = document.createElement(e.type === "image" ? "img" : "div"); node.style.cssText = "position:absolute;transform:translate(-50%,-50%);white-space:nowrap;pointer-events:none";
+    if (e.type === "image") node.src = e.img; else elStyle(node, e);
+    if (e.type === "image") { elStyle(node, e); node.style.width = ((e.w || 140) * scale) + "px"; }
+    else { node.style.fontSize = ((e.fs || 20) * scale) + "px"; if (e.type === "button") node.style.padding = (6 * scale) + "px " + (12 * scale) + "px"; }
+    wrap.append(node);
+  });
+  return wrap;
+}
+function makeElNode(e, onSelect) {
+  const node = e.type === "image" ? document.createElement("img") : h("div", "adel" + (e.type === "button" ? " btnel" : ""));
+  node.classList.add("adel"); if (e.type === "image") node.alt = "";
+  elStyle(node, e); node.dataset.id = e.id;
+  node.addEventListener("pointerdown", ev => {
+    ev.stopPropagation(); onSelect(e.id);
+    const rect = node.parentElement.getBoundingClientRect(); node.setPointerCapture(ev.pointerId);
+    const move = mv => { const x = Math.min(96, Math.max(4, (mv.clientX - rect.left) / rect.width * 100)), y = Math.min(96, Math.max(4, (mv.clientY - rect.top) / rect.height * 100)); e.x = x; e.y = y; node.style.left = x + "%"; node.style.top = y + "%"; };
+    const up = () => { node.removeEventListener("pointermove", move); node.removeEventListener("pointerup", up); node.removeEventListener("pointercancel", up); };
+    node.addEventListener("pointermove", move); node.addEventListener("pointerup", up); node.addEventListener("pointercancel", up);
+  });
+  return node;
+}
+function newEl(type) {
+  if (type === "image") return { id: "e" + Math.random().toString(36).slice(2, 9), type, img: null, ar: 1, w: 140, radius: 0, link: "", x: 50, y: 50 };
+  return { id: "e" + Math.random().toString(36).slice(2, 9), type, text: type === "button" ? "Learn more" : "Your text here", x: 50, y: type === "button" ? 80 : 35, fs: type === "button" ? 18 : 22, color: "#ffffff", weight: type === "button" ? "700" : "600", font: "sora", align: "center", ...(type === "button" ? { bg: "#7c5cff", radius: 12, shape: "rounded", link: "" } : {}) };
+}
+function adBgPanel(container, sync, repaint) {
+  const p = h("div", "adpanel"); p.append(h("div", "sec", "BACKGROUND"));
+  p.append(chipRow([["color", "Solid color"], ["gradient", "Gradient"], ["image", "Image"]], adBg.type, v => { adBg.type = v; if (v === "gradient" && !adBg.c2) adBg.c2 = "#ff5c9d"; repaint(); sync(); }));
+  if (adBg.type === "image") {
+    const up = h("button", "btn gh sm", adBg.image ? "Change image" : "Upload image"); up.onclick = () => pickImgFile(d => { adBg.image = d; sync(); repaint(); }); p.append(up);
+    if (adBg.image) { const rm = h("button", "btn gh sm", "Remove image"); rm.onclick = () => { adBg.image = null; sync(); repaint(); }; p.append(rm); }
+  } else {
+    const row = h("div", "swrow2"); row.append(h("span", "sub", adBg.type === "gradient" ? "Color 1" : "Color"));
+    const c1 = document.createElement("input"); c1.type = "color"; c1.value = adBg.c1 || "#151830"; c1.oninput = () => { adBg.c1 = c1.value; sync(); }; row.append(c1);
+    if (adBg.type === "gradient") {
+      row.append(h("span", "sub", "Color 2")); const c2 = document.createElement("input"); c2.type = "color"; c2.value = adBg.c2 || "#ff5c9d"; c2.oninput = () => { adBg.c2 = c2.value; sync(); }; row.append(c2);
+      row.append(h("span", "sub", "Angle")); const ang = document.createElement("input"); ang.type = "range"; ang.min = 0; ang.max = 360; ang.value = adBg.angle || 135; ang.style.width = "90px"; ang.oninput = () => { adBg.angle = +ang.value; sync(); }; row.append(ang);
+    }
+    p.append(row);
+  }
+  container.append(p);
+}
+function elPanel(container, stage, el, repaintEl) {
+  const p = h("div", "adpanel"), sync = () => { const node = stage.querySelector(`.adel[data-id="${el.id}"]`); if (node) elStyle(node, el); };
+  const del = () => { const node = stage.querySelector(`.adel[data-id="${el.id}"]`); if (node) node.remove(); adEls = adEls.filter(x => x.id !== el.id); adSelId = null; repaintEl(); };
+  if (el.type === "image") {
+    p.append(h("div", "sec", "IMAGE ELEMENT · drag it on the preview to move it"));
+    const sizeRow = h("div", "swrow2"); sizeRow.append(h("span", "sub", "Size"));
+    const wSl = document.createElement("input"); wSl.type = "range"; wSl.min = 40; wSl.max = 280; wSl.value = el.w || 140; wSl.style.width = "120px"; wSl.oninput = () => { el.w = +wSl.value; sync(); }; sizeRow.append(wSl); p.append(sizeRow);
+    const radRow = h("div", "swrow2"); radRow.append(h("span", "sub", "Corner rounding"));
+    const rad = document.createElement("input"); rad.type = "range"; rad.min = 0; rad.max = 60; rad.value = el.radius ?? 0; rad.style.width = "120px"; rad.oninput = () => { el.radius = +rad.value; sync(); }; radRow.append(rad); p.append(radRow);
+    const link = document.createElement("input"); link.placeholder = "Optional link (makes the image tappable)"; link.value = el.link || ""; link.oninput = () => { el.link = link.value; }; p.append(link);
+    const chg = h("button", "btn gh sm", "Replace image"); chg.onclick = () => pickImgFile(d => loadImgMeta(d, ar => { el.img = d; el.ar = ar; sync(); })); p.append(chg);
+    const delBtn = h("button", "btn dg sm", "Delete element"); delBtn.onclick = del; p.append(delBtn);
+    container.append(p); return;
+  }
+  p.append(h("div", "sec", (el.type === "button" ? "BUTTON" : "TEXT") + " ELEMENT · drag it on the preview to move it"));
+  const txt = document.createElement("input"); txt.value = el.text || ""; txt.placeholder = el.type === "button" ? "Button text" : "Text content"; txt.oninput = () => { el.text = txt.value; sync(); }; p.append(txt);
+  if (el.type === "button") { const link = document.createElement("input"); link.placeholder = "Link (https://…)"; link.value = el.link || ""; link.oninput = () => { el.link = link.value; }; p.append(link); }
+  const sizeRow = h("div", "swrow2"); sizeRow.append(h("span", "sub", "Size"));
+  const fs = document.createElement("input"); fs.type = "range"; fs.min = 10; fs.max = 48; fs.value = el.fs || 20; fs.style.width = "120px"; fs.oninput = () => { el.fs = +fs.value; sync(); }; sizeRow.append(fs); p.append(sizeRow);
+  const colorRow = h("div", "swrow2"); colorRow.append(h("span", "sub", "Text color"));
+  const col = document.createElement("input"); col.type = "color"; col.value = el.color || "#ffffff"; col.oninput = () => { el.color = col.value; sync(); }; colorRow.append(col);
+  if (el.type === "button") { colorRow.append(h("span", "sub", "Button color")); const bgc = document.createElement("input"); bgc.type = "color"; bgc.value = el.bg || "#7c5cff"; bgc.oninput = () => { el.bg = bgc.value; sync(); }; colorRow.append(bgc); }
+  p.append(colorRow);
+  p.append(chipRow([["sora", "Sora"], ["serif", "Serif"], ["mono", "Mono"], ["rounded", "Rounded"], ["condensed", "Condensed"], ["impact", "Impact"], ["cursive", "Script"]], el.font || "sora", v => { el.font = v; sync(); }));
+  p.append(chipRow([["400", "Regular"], ["600", "Medium"], ["700", "Bold"]], el.weight || "400", v => { el.weight = v; sync(); }));
+  p.append(chipRow([["left", "Left"], ["center", "Center"], ["right", "Right"]], el.align || "center", v => { el.align = v; sync(); }));
+  if (el.type === "button") {
+    p.append(chipRow([["rounded", "Rounded"], ["pill", "Pill"], ["square", "Square"], ["outline", "Outline"]], el.shape || "rounded", v => { el.shape = v; sync(); }));
+    const radRow = h("div", "swrow2"); radRow.append(h("span", "sub", "Corner radius (rounded shape)"));
+    const rad = document.createElement("input"); rad.type = "range"; rad.min = 0; rad.max = 30; rad.value = el.radius ?? 12; rad.style.width = "120px"; rad.oninput = () => { el.radius = +rad.value; sync(); }; radRow.append(rad); p.append(radRow);
+  }
+  const delBtn = h("button", "btn dg sm", "Delete element"); delBtn.onclick = del;
+  p.append(delBtn); container.append(p);
+}
+function vAds(M) {
+  if (!adBg) resetAdEditor();
+  M.append(h("div", "sec", (adEditId ? "EDIT AD" : "NEW AD") + " · covers the whole screen once for every user, with a close button always available"));
+  const stage = h("div", "adstage"); bgStyle(stage, adBg);
+  const repaintEl = () => { elWrap.innerHTML = ""; stage.querySelectorAll(".adel").forEach(n => n.classList.toggle("sel", n.dataset.id === adSelId)); const el = adEls.find(x => x.id === adSelId); if (el) elPanel(elWrap, stage, el, repaintEl); };
+  adEls.forEach(e => stage.appendChild(makeElNode(e, id => { adSelId = id; repaintEl(); })));
+  stage.addEventListener("pointerdown", ev => { if (ev.target === stage) { adSelId = null; repaintEl(); } });
+  M.append(stage);
+  const tools = h("div", "adtools");
+  const addOne = type => { const e = newEl(type); adEls.push(e); adSelId = e.id; stage.appendChild(makeElNode(e, id => { adSelId = id; repaintEl(); })); repaintEl(); };
+  const addT = h("button", "btn gh sm", "+ Text"); addT.onclick = () => addOne("text");
+  const addB = h("button", "btn gh sm", "+ Button"); addB.onclick = () => addOne("button");
+  const addI = h("button", "btn gh sm", "+ Image"); addI.onclick = () => pickImgFile(d => loadImgMeta(d, ar => { const e = newEl("image"); e.img = d; e.ar = ar; adEls.push(e); adSelId = e.id; stage.appendChild(makeElNode(e, id => { adSelId = id; repaintEl(); })); repaintEl(); }));
+  tools.append(addT, addB, addI); M.append(tools);
+  const bgWrap = h("div"); M.append(bgWrap);
+  const repaintBg = () => { bgWrap.innerHTML = ""; adBgPanel(bgWrap, () => bgStyle(stage, adBg), repaintBg); }; repaintBg();
+  const elWrap = h("div"); M.append(elWrap); repaintEl();
+  const err = h("div", "err");
+  const save = h("button", "btn", adEditId ? "Save changes" : "Create ad");
+  save.onclick = async () => {
+    err.textContent = "";
+    if (!adEls.length) return err.textContent = "Add at least one text, button or image element.";
+    for (const e of adEls) if (e.type !== "image" && e.link !== undefined && e.link && !/^https?:\/\//i.test(e.link)) return err.textContent = "Links should start with http:// or https://";
+    for (const e of adEls) if (e.type === "image" && e.link && !/^https?:\/\//i.test(e.link)) return err.textContent = "Links should start with http:// or https://";
+    for (const e of adEls) if (e.type === "image" && !e.img) return err.textContent = "One of your images didn't upload properly — replace it.";
+    save.disabled = true;
+    try {
+      const elements = Object.fromEntries(adEls.map(e => [e.id, e.type === "image"
+        ? { type: "image", img: e.img, ar: e.ar || 1, w: e.w || 140, radius: e.radius ?? 0, link: e.link || "", x: e.x, y: e.y }
+        : { type: e.type, text: e.text || "", x: e.x, y: e.y, fs: e.fs || 20, color: e.color || "#fff", weight: e.weight || "400", font: e.font || "sora", align: e.align || "center", ...(e.type === "button" ? { bg: e.bg || "#7c5cff", radius: e.radius ?? 12, shape: e.shape || "rounded", link: e.link || "" } : {}) }]));
+      const payload = { bg: adBg, elements, active: adEditId ? ADS[adEditId].active !== false : true, by: me.uid, ts: (adEditId && ADS[adEditId].ts) || serverTimestamp() };
+      if (adEditId) await update(ref(db, "ads/" + adEditId), payload); else await set(push(ref(db, "ads")), payload);
+      log(adEditId ? "edited an ad" : "created a new ad", null);
+      adEditId = null; resetAdEditor(); render();
+    } catch (e) { err.textContent = e.message; save.disabled = false; }
+  };
+  const btns = h("div", "acts"); btns.append(save);
+  if (adEditId) { const cancel = h("button", "btn gh", "Cancel"); cancel.onclick = () => { adEditId = null; resetAdEditor(); render(); }; btns.append(cancel); }
+  M.append(err, btns);
+
+  M.append(h("div", "sec", "ALL ADS"));
+  const L = Object.entries(ADS).sort((a, b) => (b[1].ts || 0) - (a[1].ts || 0));
+  if (!L.length) M.append(h("div", "empty", "No ads yet — build one above."));
+  L.forEach(([id, a]) => {
+    const r = h("div", "row"); r.style.flexWrap = "wrap";
+    const els = Object.values(a.elements || {}), firstTxt = els.find(e => e.type === "text"), firstBtn = els.find(e => e.type === "button");
+    const label = (firstTxt && firstTxt.text) || (firstBtn && firstBtn.text) || "Untitled ad", t = h("div", "t");
+    const b = h("b", "", label); if (a.active === false) b.append(h("span", "tag bad", "PAUSED"));
+    const views = Object.keys(ADV[id] || {}).length;
+    t.append(b, h("div", "sub", els.length + (els.length === 1 ? " element" : " elements")), h("div", "sub", views + (views === 1 ? " view" : " views") + " · " + ago(a.ts)));
+    const tgl = h("button", "btn gh sm", a.active === false ? "Activate" : "Pause");
+    tgl.onclick = () => run(() => update(ref(db, "ads/" + id), { active: a.active === false }), (a.active === false ? "activated" : "paused") + " an ad", null);
+    const ed = h("button", "btn gh sm", "Edit"); ed.onclick = () => { adEditId = id; adBg = a.bg ? { ...a.bg } : { type: "color", c1: "#151830" }; adEls = Object.entries(a.elements || {}).map(([eid, e]) => ({ id: eid, ...e })); adSelId = null; render(); };
+    const d = h("button", "btn dg sm", "Delete"); d.onclick = () => run(() => update(ref(db), { ["ads/" + id]: null, ["adViews/" + id]: null }), "deleted an ad", null, "Delete this ad? It'll stop being shown to anyone.");
+    r.append(staticPreview(a, 54, 96), t, tgl, ed, d); M.append(r);
+  });
+}
+
+function vTeam(M) {
+  const own = myRole === "owner"; M.append(h("div", "sec", "ADMIN TEAM"));
+  Object.entries(AD).forEach(([id, a]) => {
+    const role = a === true || a.role === "owner" ? "Owner" : "Admin", u = U[id] || {}, r = h("div", "row"), t = h("div", "t"), name = (a && a.name) || u.name || u.email || id, b = h("b", "", name);
+    b.append(h("span", "tag", role)); if (id === me.uid) b.append(h("span", "tag", "YOU"));
+    t.append(b, h("div", "sub", ((a && a.email) || u.email || "") + (a && a.ts ? " · joined " + ago(a.ts) : ""))); r.append(av({ name, photo: u.photo }), t);
+    if (own && id !== me.uid) { const d = h("button", "btn dg sm", "Remove"); d.onclick = () => run(() => remove(ref(db, "admins/" + id)), "removed admin access from", id, "Remove admin access for this person?"); r.append(d); }
+    M.append(r);
+  });
+  if (!own) return M.append(h("div", "sub", "Only owners can invite or remove admins."));
+  const nb = h("button", "btn", "Create invite code");
+  nb.onclick = () => { const a = new Uint8Array(12); crypto.getRandomValues(a); const code = [...a].map(x => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[x % 32]).join(""); run(() => set(ref(db, "adminInvites/" + code), { by: me.uid, ts: serverTimestamp(), exp: Date.now() + 48 * 36e5 }), "created an admin invite", null); };
+  M.append(h("div", "sec", "INVITE CODES · valid 48 hours, one use"), nb);
+  Object.entries(INV).sort((a, b) => (b[1].ts || 0) - (a[1].ts || 0)).forEach(([code, i]) => {
+    const act = !i.used && i.exp >= Date.now(), r = h("div", "row"), t = h("div", "t");
+    t.append(h("b", "", code), h("div", "sub", i.used ? "Used by " + nm(i.usedBy) : act ? "Active until " + new Date(i.exp).toLocaleString() : "Expired")); r.append(t);
+    if (act) { const c = h("button", "btn gh sm", "Copy"); c.onclick = () => navigator.clipboard.writeText(code).then(() => toast("Code copied")); r.append(c); }
+    const d = h("button", "btn dg sm", "Delete"); d.onclick = () => run(() => remove(ref(db, "adminInvites/" + code)), "deleted an admin invite", null); r.append(d); M.append(r);
+  });
+}
+/* ---------- actions ---------- */
+async function run(fn, msg, target, conf) {
+  if (conf && !confirm(conf)) return;
+  try { await fn(); log(msg, target); toast("Done"); }
+  catch (e) { toast(/permission/i.test(e.code + e.message) ? "Permission denied — update your database rules for admins" : e.message); }
+}
+function userDlg(id) {
+  dlgId = id; const u = U[id]; const C = $("#dc"), D = $("#dlg"); if (!u) { D.classList.add("hide"); dlgId = null; return; }
+  C.innerHTML = ""; const hd = h("div", "head"), nb = h("b", "", u.name || u.email || "Unknown"); nb.style.fontSize = "18px"; if (V[id]) nb.append(vt());
+  hd.append(av(u, "big"), nb, h("div", "sub", (u.username ? "@" + u.username : "no username") + (B[id] ? " · SUSPENDED" : ""))); if (u.bio) hd.append(h("div", "", u.bio)); C.append(hd);
+  const mine = Object.entries(P).filter(([, p]) => p.uid === id).sort((a, b) => (b[1].ts || 0) - (a[1].ts || 0)), fc = FC[id];
+  const cell = (l, v) => { const d = h("div"); d.append(h("small", "", l), document.createTextNode(String(v))); return d; }, info = h("div", "info");
+  info.append(cell("Email", u.email || "—"), cell("Status", u.online ? "Online" : u.lastSeen ? "Last seen " + ago(u.lastSeen) : "Offline"), cell("Posts", mine.length), cell("Live stories", live(id)),
+    cell("Groups", Object.values(G).filter(g => g.members && g.members[id]).length), cell("Followers / Following", fc ? fc.a + " / " + fc.b : "…"), cell("UID", id));
+  if (B[id]) info.append(cell("Suspended", (B[id].reason || "no reason") + " · " + ago(B[id].ts)));
+  C.append(info);
+  if (!fc) Promise.all([get(ref(db, "followers/" + id)), get(ref(db, "following/" + id))]).then(([a, b]) => { FC[id] = { a: a.size, b: b.size }; if (dlgId === id) userDlg(id); }).catch(() => { FC[id] = { a: "?", b: "?" }; });
+  const acts = h("div", "acts"), act = (l, cls, fn, msg, conf) => { const b = h("button", "btn sm " + cls, l); b.onclick = () => run(fn, msg, id, conf); acts.append(b); };
+  V[id] ? act("Remove blue tick", "gh", () => remove(ref(db, "verified/" + id)), "removed the blue tick from") : act("Give blue tick", "", () => set(ref(db, "verified/" + id), true), "gave a blue tick to");
+  B[id] ? act("Unsuspend", "gh", () => remove(ref(db, "banned/" + id)), "unsuspended")
+    : act("Suspend account", "dg", async () => { const r = prompt("Reason for suspension (shown to the user):"); if (r === null) throw new Error("Cancelled"); await set(ref(db, "banned/" + id), { reason: r.trim(), by: me.uid, ts: serverTimestamp() }); }, "suspended");
+  if (u.photo) act("Remove photo", "gh", () => update(ref(db, "users/" + id), { photo: null, noPhoto: true }), "removed the profile photo of", "Remove this profile photo?");
+  if (u.bio) act("Clear bio", "gh", () => update(ref(db, "users/" + id), { bio: "" }), "cleared the bio of");
+  if (u.username) act("Reset username", "gh", () => update(ref(db), { [`users/${id}/username`]: null, ["usernames/" + u.username]: null }), "reset the username of", "They'll be asked to choose a new username next time they open the app.");
+  if (live(id)) act("Delete stories", "dg", () => remove(ref(db, "stories/" + id)), "deleted all stories of", "Delete all of this user's stories?");
+  if (mine.length) act("Delete all posts", "dg", () => update(ref(db), Object.fromEntries(mine.map(([pid]) => ["posts/" + pid, null]))), "deleted all posts of", "Delete all " + mine.length + " posts?");
+  C.append(acts);
+  if (mine.length) { C.append(h("div", "sec", "RECENT POSTS")); mine.slice(0, 20).forEach(([pid, p]) => C.append(postRow(pid, p))); }
+  const x = h("button", "btn gh", "Close"); x.onclick = () => { D.classList.add("hide"); dlgId = null; }; C.append(x); D.classList.remove("hide");
+}
+$("#dlg").onclick = e => { if (e.target.id === "dlg") { e.target.classList.add("hide"); dlgId = null; } };
+</script>
+</body>
+</html>
