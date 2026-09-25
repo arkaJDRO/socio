@@ -189,6 +189,24 @@ textarea{font:inherit;font-size:16px;color:var(--txt);background:var(--in);borde
 .acts{display:flex;gap:4px;padding:8px 10px 0}.act{font-size:24px;padding:4px 6px;border-radius:10px}
 .lks{font-weight:600;padding:4px 14px 0}.cap,.cm .cap{padding:3px 14px;line-height:1.45;word-break:break-word}
 .vc2{color:var(--mut);font-size:13px;text-align:left;padding:3px 14px}
+.vc2.sm{padding-left:40px;font-size:12px}
+.cmeta{display:flex;align-items:center;gap:10px;padding:0 14px 6px 40px;font-size:12px;color:var(--mut)}
+.rlink{font-weight:600;color:inherit}
+.rlink:hover{color:var(--txt)}
+.replies{padding-left:26px}
+.cmt.reply .cap{padding-left:36px}
+.cmt.reply .cmeta{padding-left:62px}
+.cm{max-height:336px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.mention{color:var(--a);font-weight:600;cursor:pointer}
+.mention:hover{text-decoration:underline}
+.mdrop{position:fixed;z-index:60;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:4px;box-shadow:0 12px 32px #0008;max-height:230px;overflow-y:auto}
+.mdi{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:10px;cursor:pointer}
+.mdi.on,.mdi:hover{background:var(--panel2)}
+.mdi .av{width:26px;height:26px;font-size:11px;flex:none}
+.mdn{font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mdu{color:var(--mut);font-size:12px;flex:none}
+.cmt.hid{opacity:.5}
+.cmt .cin{padding:4px 14px 6px 40px}
 .cin{display:flex;gap:8px;padding:8px 14px 12px;align-items:center}.cin input{padding:9px 12px}
 .col{display:grid;gap:14px}
 .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:3px}
@@ -876,10 +894,10 @@ function paint(cid, data) {
     else if (m.share) bub = shareBub(m.share);
     else if (m.sstory) {
       const prev = storyBub(m.sstory, !!m.storyReply);
-      if (m.storyReply && m.text) { const wrap = h("div", "srwrap"); wrap.append(prev, h("div", "bub", m.text)); bub = wrap; }
+      if (m.storyReply && m.text) { const sb = h("div", "bub"); sb.append(mentionFrag(m.text, null)); const wrap = h("div", "srwrap"); wrap.append(prev, sb); bub = wrap; }
       else bub = prev;
     }
-    else bub = h("div", "bub", m.text);
+    else { bub = h("div", "bub"); bub.append(mentionFrag(m.text, null)); }
     if (!m.deleted) hold(bub, (x, y) => showMenu(x, y, cid, mid, m));
     let content;
     if (m.reply && !m.deleted) {
@@ -1021,8 +1039,9 @@ $("#ginfo").onclick = e => { if (e.target.id === "ginfo") e.target.classList.add
 /* ---------- notes, nicknames, block, hide ---------- */
 const nstyle = c => c ? [BG[c - 1], "#fff"] : ["#eef0ff", "#151830"];
 function noteEls(n) {
-  const has = n && n.text, b = h("div", "nb" + (has ? "" : " ph"), has ? n.text : "Note\u2026");
-  if (has) { const [bg, fg] = nstyle(n.c | 0); b.style.background = bg; b.style.color = fg; }
+  const has = n && n.text, b = h("div", "nb" + (has ? "" : " ph"));
+  if (has) { b.append(mentionFrag(n.text, null)); const [bg, fg] = nstyle(n.c | 0); b.style.background = bg; b.style.color = fg; }
+  else b.textContent = "Note\u2026";
   return has && n.emoji ? [b, h("div", "ne", n.emoji)] : [b];
 }
 function renderNotes() {
@@ -1042,7 +1061,7 @@ function noteSheet(uid) {
   pv.style.cssText = "margin:4px auto 0;cursor:default;pointer-events:none";
   if (own) {
     let col = n ? n.c | 0 : 0, emo = n ? n.emoji || "" : "";
-    i.maxLength = 60; i.placeholder = "Share a thought\u2026"; i.value = n ? n.text : "";
+    i.maxLength = 60; i.placeholder = "Share a thought\u2026 (@ to mention)"; i.value = n ? n.text : ""; attachMentions(i);
     const draw = () => { pv.innerHTML = ""; pv.append(...noteEls({ text: i.value.trim() || "Your note", c: col, emoji: emo }), avatar(u0.name, u0.photo)); }, cr = h("div", "sw"), er = h("div", "sw");
     chips(cr, [0, 1, 2, 3, 4, 5], col, v => { col = v; draw(); }, k => nstyle(k)[0]);
     chips(er, ["\u2013", "😍", "🔥", "😴", "🎧", "🥳", "💀", "✨"], emo || "\u2013", v => { emo = v === "\u2013" ? "" : v; draw(); });
@@ -1058,7 +1077,7 @@ function noteSheet(uid) {
   } else {
     if (!n) return M.classList.add("hide");
     pv.append(...noteEls(n), avatar(u0.name, u0.photo));
-    i.placeholder = "Reply to " + dn(uid) + "\u2026"; i.maxLength = 300;
+    i.placeholder = "Reply to " + dn(uid) + "\u2026"; i.maxLength = 300; attachMentions(i);
     const lref = ref(db, `notes/${uid}/likes/${me.uid}`), lb = h("button", "ib"), row = h("div", "stcin"), go = h("button", "btn", "Send reply"), pf = h("button", "btn ghost", "View profile"); let lk = !!(n.likes && n.likes[me.uid]);
     const paint = () => { lb.innerHTML = ""; lb.append(ic("heart", lk ? "fill" : "")); lb.style.color = lk ? "#ff5c9d" : ""; }; paint(); lb.setAttribute("aria-label", "Like note");
     lb.onclick = () => { lk = !lk; paint(); lk ? set(lref, true) : remove(lref); };
@@ -1275,7 +1294,7 @@ const poster = file => new Promise(ok => {
   v.onseeked = grab;
   v.src = u;
 });
-const MAX_VIDEO_SECONDS = 20;
+const MAX_VIDEO_SECONDS = 30;
 const videoDuration = file => new Promise(ok => {
   const v = document.createElement("video"), u = URL.createObjectURL(file), done = d => { URL.revokeObjectURL(u); ok(d); };
   v.preload = "metadata"; v.src = u; setTimeout(() => done(0), 6000);
@@ -1422,6 +1441,8 @@ const feedOf = uid => Object.entries(posts).filter(([, p]) => !uid || p.uid === 
 const chips = (row, items, v, on, deco) => { const draw = () => { row.innerHTML = ""; items.forEach(it => { const b = h("button", "opt" + (v === it ? " on" : ""), deco ? "" : it); b.type = "button"; if (deco) b.style.background = deco(it); b.onclick = () => { v = it; on(it); draw(); }; row.append(b); }); }; draw(); };
 
 const openC = new Set();
+const openReplies = new Set();
+const replyCtx = {};
 function followBtn(id) {
   if (id === me.uid || mutual(id) || isBlk(id)) return null;
   const st = fing[id] ? "req" : fers[id] ? "back" : "none", b = h("button", "fb" + (st === "req" ? " gh" : ""), st === "req" ? "Requested" : st === "back" ? "Follow back" : "Follow");
@@ -1439,6 +1460,77 @@ function openPost(pid, back) {
   refresh = () => { B.innerHTML = ""; if (posts[pid]) B.append(postCard(pid, posts[pid], () => openPost(pid, back))); else if (missingPosts[pid]) { back ? back() : closeSheet(); } else { ensurePost(pid); B.append(h("div", "empty", "Loading…")); } };
   refresh();
 }
+const mHandle = u => (u.username || (u.name || "user").toLowerCase().replace(/[^a-z0-9_.]+/g, "")) || "user";
+function mentionFrag(text, back) {
+  const frag = document.createDocumentFragment(), parts = (text || "").split(/(@[a-z0-9_.]+)/gi);
+  parts.forEach(part => {
+    const mm = /^@([a-z0-9_.]+)$/i.exec(part), hit = mm && Object.entries(users).find(([, u]) => mHandle(u).toLowerCase() === mm[1].toLowerCase());
+    if (hit) { const s = h("span", "mention", part); s.onclick = e => { e.stopPropagation(); openProfile(hit[0], back); }; frag.append(s); }
+    else frag.append(document.createTextNode(part));
+  });
+  return frag;
+}
+/* ---------- @mention autocomplete (comments & notes) ---------- */
+const mdrop = h("div", "mdrop hide"); document.body.append(mdrop);
+let mdItems = [], mdIdx = -1, mdInput = null;
+function mdClose() { mdrop.classList.add("hide"); mdItems = []; mdIdx = -1; mdInput = null; }
+function mdPosition() {
+  if (!mdInput) return;
+  const r = mdInput.getBoundingClientRect(), rh = Math.min(mdItems.length, 5) * 42 + 8;
+  mdrop.style.width = Math.max(200, Math.min(300, r.width)) + "px";
+  mdrop.style.left = Math.max(8, Math.min(r.left, window.innerWidth - mdrop.offsetWidth - 8)) + "px";
+  let top = r.top - rh - 6; if (top < 4) top = r.bottom + 6;
+  mdrop.style.top = top + "px";
+}
+function mdRender() {
+  mdrop.innerHTML = "";
+  mdItems.forEach(([id, u], i) => {
+    const row = h("div", "mdi" + (i === mdIdx ? " on" : "")), a = avatar(u.name, u.photo);
+    a.style.cssText = "width:26px;height:26px;font-size:11px";
+    row.append(a, h("span", "mdn", u.name || u.username || "user"), h("span", "mdu", "@" + mHandle(u)));
+    row.onmousedown = e => { e.preventDefault(); mdPick(id, u); };
+    row.addEventListener("touchstart", e => { e.preventDefault(); mdPick(id, u); }, { passive: false });
+    row.onmouseenter = () => { mdIdx = i; mdRender(); };
+    mdrop.append(row);
+  });
+  mdrop.classList.toggle("hide", !mdItems.length);
+  if (mdItems.length) mdPosition();
+}
+function mdToken(input) {
+  const v = input.value, pos = input.selectionStart ?? v.length, left = v.slice(0, pos);
+  const m = /(^|[\s])@([a-z0-9_.]{0,20})$/i.exec(left);
+  return m ? m[2] : null;
+}
+function mdPick(id, u) {
+  const input = mdInput; if (!input) return;
+  const uname = mHandle(u);
+  const v = input.value, pos = input.selectionStart ?? v.length, left = v.slice(0, pos), right = v.slice(pos);
+  const nl = left.replace(/(^|[\s])@([a-z0-9_.]{0,20})$/i, (m, pre) => pre + "@" + uname + " ");
+  mdClose(); input.value = nl + right;
+  const cp = nl.length; input.focus(); input.setSelectionRange(cp, cp);
+}
+function attachMentions(input) {
+  input.addEventListener("input", () => {
+    const q = mdToken(input);
+    if (q === null) { if (mdInput === input) mdClose(); return; }
+    mdInput = input;
+    mdItems = Object.entries(users).filter(([id, u]) => id !== me.uid && !isBlk(id) &&
+      ((u.username || "").toLowerCase().startsWith(q.toLowerCase()) || (u.name || "").toLowerCase().startsWith(q.toLowerCase()))).slice(0, 6);
+    mdIdx = mdItems.length ? 0 : -1; mdRender();
+  });
+  input.addEventListener("keydown", e => {
+    if (mdInput !== input || mdrop.classList.contains("hide")) return;
+    if (e.key === "ArrowDown") { e.preventDefault(); mdIdx = (mdIdx + 1) % mdItems.length; mdRender(); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); mdIdx = (mdIdx - 1 + mdItems.length) % mdItems.length; mdRender(); }
+    else if (e.key === "Enter" || e.key === "Tab") { if (mdIdx >= 0) { e.preventDefault(); e.stopImmediatePropagation(); mdPick(...mdItems[mdIdx]); } }
+    else if (e.key === "Escape") { mdClose(); }
+  }, true);
+  input.addEventListener("blur", () => setTimeout(() => { if (mdInput === input) mdClose(); }, 150));
+}
+mdrop.addEventListener("touchmove", e => e.stopPropagation(), { passive: true });
+mdrop.addEventListener("scroll", e => e.stopPropagation(), { passive: true });
+window.addEventListener("scroll", e => { if (!mdrop.contains(e.target)) mdClose(); }, true);
+window.addEventListener("resize", mdClose);
 function postCard(pid, p, back) {
   back = back || (() => openFeed());
   const u = users[p.uid] || {}, who = p.uid === me.uid ? "You" : u.name || "Bro", c = h("div", "post ig"), hd = h("div", "ph"), av = avatar(u.name, u.photo);
@@ -1450,24 +1542,107 @@ function postCard(pid, p, back) {
   const lk = p.likes || {}, on = !!lk[me.uid], lref = ref(db, `posts/${pid}/likes/${me.uid}`), like = () => on ? remove(lref) : set(lref, true);
   const items = p.media || (p.img ? [{ url: p.img, kind: "image" }] : []);
   if (items.length) c.append(carousel(items, w => { if (!on) like(); const x = h("div", "hp"); x.append(ic("heart", "fill lg")); w.append(x); setTimeout(() => x.remove(), 800); }));
-  const cs = Object.entries(p.comments || {}).sort((a, b) => (a[1].ts || 0) - (b[1].ts || 0)), cm = h("div", "cm" + (openC.has(pid) ? "" : " hide"));
+  const isCreator = p.uid === me.uid;
+  const allC = Object.entries(p.comments || {}).filter(([, k]) => isCreator || !k.hidden).sort((a, b) => (a[1].ts || 0) - (b[1].ts || 0));
+  const roots = allC.filter(([, k]) => !k.replyTo), repliesOf = cid => allC.filter(([, k]) => k.replyTo === cid);
+  const cm = h("div", "cm" + (openC.has(pid) ? "" : " hide"));
   const tg = () => { cm.classList.toggle("hide"); cm.classList.contains("hide") ? openC.delete(pid) : openC.add(pid); };
   const ac = h("div", "acts"), lb = h("button", "act"), cb = h("button", "act");
   lb.append(ic("heart", on ? "fill" : "")); cb.append(ic("comment"));
   lb.setAttribute("aria-label", "Like"); cb.setAttribute("aria-label", "Comments"); const sb = h("button", "act"); sb.append(ic("send")); sb.setAttribute("aria-label", "Share to chat"); sb.onclick = () => sharePost(pid); lb.onclick = like; cb.onclick = tg; ac.append(lb, cb, sb); c.append(ac);
   const n = Object.keys(lk).length; if (n) c.append(h("div", "lks", n + (n > 1 ? " likes" : " like")));
   if (p.text) { const cp = h("div", "cap"); cp.append(h("b", "", who + " "), document.createTextNode(p.text)); c.append(cp); }
-  if (cs.length) { const v = h("button", "vc2", `View all ${cs.length} comment${cs.length > 1 ? "s" : ""}`); v.onclick = tg; c.append(v); }
-  cs.forEach(([, k]) => {
-    const ku = users[k.uid] || {}, r = h("div", "cap"), a = avatar(ku.name, ku.photo), b = h("b", "", (k.uid === me.uid ? "You" : ku.name || "Bro") + " ");
+  if (allC.length) { const v = h("button", "vc2", `View all ${allC.length} comment${allC.length > 1 ? "s" : ""}`); v.onclick = tg; c.append(v); }
+  const inp = h("input", "cinp"), rbWrap = h("div");
+  attachMentions(inp);
+  const drawReplyBar = () => {
+    rbWrap.innerHTML = ""; const rc = replyCtx[pid];
+    inp.placeholder = rc ? `Reply to ${rc.name}…` : "Add a comment…";
+    if (!rc) return;
+    const bar = h("div", "replybar"), line = h("div", "rl"), body = h("div", "rb");
+    body.append(h("div", "rw", "Replying to " + rc.name));
+    const xb = h("button", "ib"); xb.append(ic("close", "sm")); xb.setAttribute("aria-label", "Cancel reply");
+    xb.onclick = () => { delete replyCtx[pid]; drawReplyBar(); };
+    bar.append(line, body, xb); rbWrap.append(bar);
+  };
+  const startReply = (rootCid, name, mention) => {
+    replyCtx[pid] = { cid: rootCid, name };
+    if (mention) { inp.value = mention + " "; setTimeout(() => inp.setSelectionRange(inp.value.length, inp.value.length), 0); }
+    drawReplyBar(); inp.focus();
+  };
+  const delComment = (cid, isReply) => {
+    const updates = {}; updates[`posts/${pid}/comments/${cid}`] = null;
+    if (!isReply) repliesOf(cid).forEach(([rcid]) => { updates[`posts/${pid}/comments/${rcid}`] = null; });
+    update(ref(db), updates);
+  };
+  const renderComment = (cid, k, isReply) => {
+    const mine = k.uid === me.uid, ku = users[k.uid] || {}, wrap = h("div", isReply ? "cmt reply" : "cmt");
+    if (k.hidden) wrap.classList.add("hid");
+    const r = h("div", "cap"), a = avatar(ku.name, ku.photo), b = h("b", "", (mine ? "You" : ku.name || "Bro") + " ");
     a.style.cssText = "width:22px;height:22px;font-size:11px;display:inline-grid;vertical-align:middle;margin-right:6px;cursor:pointer";
     b.style.cursor = "pointer"; a.onclick = b.onclick = () => openProfile(k.uid, back);
-    r.append(a, b, document.createTextNode(k.text)); cm.append(r);
+    const textSpan = h("span", "ctext");
+    textSpan.append(mentionFrag(k.text, back));
+    if (k.edited) textSpan.append(h("span", "sm", " (edited)"));
+    if (k.hidden) textSpan.append(h("span", "sm", " · Hidden"));
+    r.append(a, b, textSpan); wrap.append(r);
+    const meta = h("div", "cmeta"), rlBtn = h("button", "rlink", "Reply");
+    meta.append(h("span", "", ago(k.ts)));
+    rlBtn.onclick = () => {
+      const name = mine ? "You" : (ku.name || "Bro");
+      const mention = isReply ? "@" + mHandle(ku) : null;
+      startReply(isReply ? k.replyTo : cid, name, mention);
+    };
+    meta.append(rlBtn);
+    const editRow = h("div", "cin hide");
+    if (mine) {
+      const eb = h("button", "rlink", "Edit");
+      eb.onclick = () => {
+        const opening = editRow.classList.contains("hide");
+        editRow.classList.toggle("hide"); textSpan.classList.toggle("hide", opening);
+        if (opening) { ei.value = k.text; ei.focus(); }
+      };
+      meta.append(eb);
+      const ei = h("input", "cinp"), sv = h("button", "fb", "Save"), cnl = h("button", "fb gh", "Cancel");
+      ei.maxLength = 300; attachMentions(ei);
+      const closeEdit = () => { editRow.classList.add("hide"); textSpan.classList.remove("hide"); };
+      sv.onclick = async () => { const t = ei.value.trim(); if (!t) return; closeEdit(); await update(ref(db, `posts/${pid}/comments/${cid}`), { text: t, edited: true }); };
+      ei.onkeydown = e => { if (e.key === "Enter") sv.onclick(); if (e.key === "Escape") closeEdit(); };
+      cnl.onclick = closeEdit;
+      editRow.append(ei, sv, cnl); wrap.append(editRow);
+    }
+    if (mine || isCreator) {
+      const db2 = h("button", "rlink", "Delete");
+      db2.onclick = () => ask("Delete this comment?", "This can't be undone.", "Delete", () => delComment(cid, isReply));
+      meta.append(db2);
+    }
+    if (isCreator && !mine) {
+      const hb = h("button", "rlink", k.hidden ? "Unhide" : "Hide");
+      hb.onclick = () => update(ref(db, `posts/${pid}/comments/${cid}`), { hidden: !k.hidden });
+      meta.append(hb);
+    }
+    wrap.append(meta); return wrap;
+  };
+  roots.forEach(([cid, k]) => {
+    cm.append(renderComment(cid, k, false));
+    const rs = repliesOf(cid); if (!rs.length) return;
+    const key = pid + ":" + cid, open = openReplies.has(key), box = h("div", "replies" + (open ? "" : " hide"));
+    rs.forEach(([rcid, rk]) => box.append(renderComment(rcid, rk, true)));
+    const label = o => `${o ? "Hide" : "View"} ${o ? "" : rs.length + " "}repl${rs.length > 1 ? "ies" : "y"}`;
+    const tgl = h("button", "vc2 sm", label(open));
+    tgl.onclick = () => { const opening = box.classList.contains("hide"); box.classList.toggle("hide"); opening ? openReplies.add(key) : openReplies.delete(key); tgl.textContent = label(opening); };
+    cm.append(tgl, box);
   });
   c.append(cm);
-  const row = h("div", "cin"), inp = h("input", "cinp"), pb = h("button", "fb", "Post");
-  inp.placeholder = "Add a comment…"; inp.maxLength = 300;
-  const go = async () => { const t = inp.value.trim(); if (!t) return; inp.value = ""; openC.add(pid); await push(ref(db, `posts/${pid}/comments`), { uid: me.uid, text: t, ts: serverTimestamp() }); };
+  drawReplyBar(); c.append(rbWrap);
+  const row = h("div", "cin"), pb = h("button", "fb", "Post");
+  inp.maxLength = 300;
+  const go = async () => {
+    const t = inp.value.trim(); if (!t) return; inp.value = ""; openC.add(pid);
+    const rc = replyCtx[pid], data = { uid: me.uid, text: t, ts: serverTimestamp() };
+    if (rc) { data.replyTo = rc.cid; openReplies.add(pid + ":" + rc.cid); delete replyCtx[pid]; drawReplyBar(); }
+    await push(ref(db, `posts/${pid}/comments`), data);
+  };
   pb.onclick = go; inp.onkeydown = e => { if (e.key === "Enter") go(); };
   row.append(inp, pb); c.append(row); return c;
 }
@@ -1701,12 +1876,12 @@ function storyComments(uid, sid, hid) {
     cs.forEach(([, cm]) => {
       const u2 = users[cm.from] || {}, r = h("div", "cap"), a = avatar(u2.name, u2.photo);
       a.style.cssText = "width:22px;height:22px;font-size:11px;display:inline-grid;vertical-align:middle;margin-right:6px";
-      r.append(a, h("b", "", (cm.from === me.uid ? "You" : u2.name || "Bro") + " "), document.createTextNode(cm.text));
+      r.append(a, h("b", "", (cm.from === me.uid ? "You" : u2.name || "Bro") + " "), mentionFrag(cm.text, null));
       list.append(r);
     });
     C.append(list);
     const row = h("div", "stcin"), inp = h("input"), pb = h("button", "fb", "Post");
-    inp.placeholder = "Add a comment…"; inp.maxLength = 300;
+    inp.placeholder = "Add a comment…"; inp.maxLength = 300; attachMentions(inp);
     const go = async () => { const txt = inp.value.trim(); if (!txt) return; inp.value = ""; try { await push(ref(db, ipath(uid, sid, hid) + "/comments"), { from: me.uid, text: txt, ts: serverTimestamp() }); } catch (e) { alert(e.message || e); } };
     pb.onclick = go; inp.onkeydown = e => { if (e.key === "Enter") go(); };
     row.append(inp, pb); C.append(row);
@@ -1936,6 +2111,7 @@ function typeUI() {
   if (near) box.scrollTop = box.scrollHeight;
 }
 $("#txt").addEventListener("input", pingTyping); $("#txt").addEventListener("blur", stopTyping);
+attachMentions($("#txt"));
 $("#txt").onkeydown = e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } };
 { const T = $("#txt"), d = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value"), grow = () => { T.style.height = "auto"; T.style.height = Math.min(T.scrollHeight, 120) + "px"; };
   Object.defineProperty(T, "value", { get() { return d.get.call(T); }, set(v) { d.set.call(T, v); grow(); } }); T.addEventListener("input", grow); }
