@@ -1241,10 +1241,39 @@ function setSrc(e, url) {
   get(ref(db, "vids/" + url.slice(4))).then(sn => { toast(""); if (sn.exists()) e.src = sn.val(); else alert("This video is no longer available."); }).catch(() => { toast(""); alert("Couldn't load the video."); });
 }
 const poster = file => new Promise(ok => {
-  const v = document.createElement("video"), u = URL.createObjectURL(file), done = d => { URL.revokeObjectURL(u); ok(d); };
-  v.muted = true; v.playsInline = true; v.preload = "metadata"; v.src = u; setTimeout(() => done(null), 6000);
-  v.onerror = () => done(null); v.onloadeddata = () => { v.currentTime = 0.1; };
-  v.onseeked = () => { const w = v.videoWidth || 320, k = Math.min(1, 320 / w), c = document.createElement("canvas"); c.width = w * k; c.height = (v.videoHeight || 180) * k; c.getContext("2d").drawImage(v, 0, 0, c.width, c.height); done(c.toDataURL("image/jpeg", 0.6)); };
+  const v = document.createElement("video"), u = URL.createObjectURL(file);
+  let settled = false, tries = 0;
+  v.muted = true; v.playsInline = true; v.preload = "auto"; v.width = 320; v.height = 240;
+  v.style.cssText = "position:fixed;left:-9999px;top:-9999px;width:320px;height:240px";
+  document.body.appendChild(v);
+  const done = d => { if (settled) return; settled = true; clearTimeout(timer); URL.revokeObjectURL(u); v.remove(); ok(d); };
+  const isBlank = ctx => {
+    const { data } = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+    for (let i = 0; i < data.length; i += 41) if (data[i] > 14 || data[i + 1] > 14 || data[i + 2] > 14) return false;
+    return true;
+  };
+  const grab = async () => {
+    if (settled) return;
+    try {
+      // Actually decoding a frame (not just seeking to a timestamp) needs the video to
+      // have played at least a tick, or many browsers hand back a solid black frame.
+      try { await v.play(); } catch {}
+      v.pause();
+      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+      const w = v.videoWidth || 320, k = Math.min(1, 320 / w), c = document.createElement("canvas");
+      c.width = w * k; c.height = (v.videoHeight || 180) * k;
+      const ctx = c.getContext("2d");
+      ctx.drawImage(v, 0, 0, c.width, c.height);
+      if (isBlank(ctx) && tries++ < 3) { v.currentTime = Math.min((v.duration || 1) - 0.05, 0.3 + tries * 0.4); return; }
+      const d = c.toDataURL("image/jpeg", 0.6);
+      done(d && d !== "data:," ? d : null);
+    } catch { done(null); }
+  };
+  const timer = setTimeout(() => done(null), 7000);
+  v.onerror = () => done(null);
+  v.onloadedmetadata = () => { try { v.currentTime = Math.min(0.1, (v.duration || 1) / 2); } catch { grab(); } };
+  v.onseeked = grab;
+  v.src = u;
 });
 const MAX_VIDEO_SECONDS = 20;
 const videoDuration = file => new Promise(ok => {
@@ -1299,6 +1328,7 @@ function carousel(items, onLike) {
   };
   items.forEach((it, i) => {
     const f = h("div", "cv"), img = mEl(it, "ci");
+    if (i === 0) img.loading = "eager";
     const measure = () => { if (img.naturalWidth && img.naturalHeight) { ratios[i] = img.naturalWidth / img.naturalHeight; if (i === active) applyHeight(i); } };
     if (img.complete && img.naturalWidth) measure(); else img.onload = measure;
     f.append(img); if (it.kind === "video") { const pl = h("span", "play"); pl.append(ic("play", "fill")); f.append(pl); }
