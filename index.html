@@ -95,6 +95,12 @@ main{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(
 .me .qreply{border-left-color:#ffffffc0;background:#ffffff22}
 .me .qreply .qwho{color:#ffffffd8}
 .qreply+.bub{border-top-left-radius:6px;border-top-right-radius:6px;margin-top:2px}
+.mtn{cursor:pointer}
+.mtnTag{font-size:11px;font-weight:700;color:var(--a);margin-bottom:3px;display:flex;align-items:center;gap:4px}
+.me .mtnTag{color:#ffffffd8}
+.mentionBackBtn{display:flex;align-items:center;gap:6px;justify-content:center;color:var(--a);font-weight:600;font-size:13px;padding:10px 0 2px}
+.storyMtag{display:flex;align-items:center;gap:8px;margin:0 14px 10px;padding:9px 12px;border-radius:14px;background:#ffffff22;color:#fff;font-size:12px;font-weight:600;cursor:pointer}
+.storyMtag:hover{background:#ffffff33}
 .bwrap{display:flex;flex-direction:column;max-width:100%}
 .swrow{position:relative;display:flex;touch-action:pan-y}
 .swarrow{position:absolute;left:-30px;top:50%;transform:translateY(-50%);opacity:0;color:var(--a);pointer-events:none;width:20px;height:20px}
@@ -177,10 +183,25 @@ textarea{font:inherit;font-size:16px;color:var(--txt);background:var(--in);borde
 .hc img,.hc video{width:100%;height:100%;object-fit:cover}
 .hi div:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #lb{position:fixed;inset:0;z-index:40;background:#000e;display:grid;place-items:center}
-#lbc{width:100%;height:100%;display:grid;place-items:center}#lbc img,#lbc video{max-width:100%;max-height:100%;object-fit:contain}
+#lbc{width:100%;height:100%;display:grid;place-items:center;position:relative}#lbc img,#lbc video{max-width:100%;max-height:100%;object-fit:contain}
 #lbx{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:12px;z-index:2}
 .lbn{position:absolute;top:50%;z-index:2;width:46px;height:46px;font-size:26px}#lbp{left:12px}#lbn{right:12px}
 #lbi{position:absolute;bottom:calc(16px + env(safe-area-inset-bottom,0px));left:0;right:0;text-align:center;color:#fffc}
+.lbSpinner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:38px;height:38px;border:3px solid #ffffff33;border-top-color:#fff;border-radius:50%;animation:lbspin .8s linear infinite;z-index:1;pointer-events:none}
+@keyframes lbspin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+.lbBigPlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:60px;height:60px;border-radius:50%;background:#0007;display:grid;place-items:center;color:#fff;z-index:2;opacity:0;transition:opacity .15s;pointer-events:none}
+.lbBigPlay.show{opacity:1;pointer-events:auto}
+.lbBigPlay .icon{width:26px;height:26px}
+.lbVC{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:10px;padding:8px 14px calc(8px + env(safe-area-inset-bottom,0px));background:linear-gradient(transparent,#000a);z-index:3}
+.lbVC button{color:#fff;flex:none}
+.lbSeek{flex:1;height:4px;border-radius:2px;background:#ffffff33;position:relative;cursor:pointer}
+.lbTime{font-size:11px;color:#fffc;min-width:76px;text-align:center;flex:none}
+.lbSpeed{font-size:12px;font-weight:700;color:#fff;background:#ffffff22;border-radius:14px;padding:5px 10px;min-width:38px;text-align:center;flex:none}
+.lbActs{position:absolute;right:10px;bottom:calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:16px;align-items:center;z-index:3}
+.lbActs.withvc{bottom:calc(64px + env(safe-area-inset-bottom,0px))}
+.lbActs button{color:#fff;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;text-shadow:0 1px 3px #000a}
+.lbActs .icon{width:25px;height:25px}
+.lbActs button.on{color:#ff5c9d}
 #toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--line);padding:10px 16px;border-radius:20px;z-index:50}
 #shb{padding-bottom:90px}
 #stat,.stx{display:flex;gap:12px;overflow-x:auto;padding:4px 2px 8px}
@@ -198,6 +219,7 @@ textarea{font:inherit;font-size:16px;color:var(--txt);background:var(--in);borde
 .cmt.reply .cmeta{padding-left:62px}
 .cm{max-height:336px;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .mention{color:var(--a);font-weight:600;cursor:pointer}
+.ov .mention{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:2px}
 .mention:hover{text-decoration:underline}
 .mdrop{position:fixed;z-index:60;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:4px;box-shadow:0 12px 32px #0008;max-height:230px;overflow-y:auto}
 .mdi{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:10px;cursor:pointer}
@@ -408,7 +430,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}select{font-siz
 <div id="story" class="hide"></div>
 <div id="scr" class="hide"></div>
 <div id="pfpv" class="hide"><div class="pfpc" id="pfpc"></div></div>
-<div id="lb" class="hide"><button class="ib" id="lbx" aria-label="Close" data-icon="close"></button><button class="ib lbn" id="lbp" aria-label="Previous" data-icon="chevronLeft"></button><button class="ib lbn" id="lbn" aria-label="Next" data-icon="chevronRight"></button><div id="lbc"></div><div id="lbi"></div></div>
+<div id="lb" class="hide"><button class="ib" id="lbx" aria-label="Close" data-icon="close"></button><button class="ib lbn" id="lbp" aria-label="Previous" data-icon="chevronLeft"></button><button class="ib lbn" id="lbn" aria-label="Next" data-icon="chevronRight"></button><div id="lbc"></div><div id="lbi"></div><div id="lbctl"></div></div>
 <div id="unm" class="hide"><div class="card"><b style="font-size:18px">Choose your username</b><div class="sub">Friends find you with it. It must be unique, and you can change it later in your profile.</div><div class="fl">Username (your unique ID)</div><input id="gun" placeholder="e.g. john_doe" autocapitalize="none" autocomplete="off" spellcheck="false" maxlength="20"><div class="uns" id="gst"></div><button class="btn" id="gsv">Continue</button><button class="link" id="gout">Sign out</button></div></div>
 <div id="toast" class="hide"></div>
 <div id="ban" class="hide"><div class="card"><div class="logo">soci<span>o</span></div><b style="font-size:18px">Your account is suspended</b><div class="sub" id="banr"></div><button class="btn ghost" id="banout">Log out</button></div></div>
@@ -542,14 +564,14 @@ const hue = s => { let n = 0; for (const c of s || "?") n = (n * 31 + c.charCode
 function avatar(name, photo, online) {
   const d = h("div", "av");
   d.style.background = `linear-gradient(135deg,hsl(${hue(name)} 70% 55%),hsl(${(hue(name) + 50) % 360} 70% 45%))`;
-  if (photo) { const i = document.createElement("img"); i.src = photo; i.referrerPolicy = "no-referrer"; i.alt = ""; i.onerror = () => { i.remove(); d.prepend(document.createTextNode((name || "?")[0].toUpperCase())); }; d.append(i); }
+  if (photo) { const i = document.createElement("img"); i.src = photo; i.referrerPolicy = "no-referrer"; i.alt = ""; i.loading = "lazy"; i.decoding = "async"; i.onerror = () => { i.remove(); d.prepend(document.createTextNode((name || "?")[0].toUpperCase())); }; d.append(i); }
   else d.textContent = (name || "?")[0].toUpperCase();
   if (online) d.append(h("i"));
   return d;
 }
 function viewPfp(name, photo) {
   const C = $("#pfpc"); C.innerHTML = ""; C.style.background = "";
-  if (photo) { const i = document.createElement("img"); i.src = photo; i.referrerPolicy = "no-referrer"; i.alt = ""; C.append(i); }
+  if (photo) { const i = document.createElement("img"); i.src = photo; i.referrerPolicy = "no-referrer"; i.alt = ""; i.decoding = "async"; C.append(i); }
   else { C.style.background = `linear-gradient(135deg,hsl(${hue(name)} 70% 55%),hsl(${(hue(name) + 50) % 360} 70% 45%))`; C.textContent = (name || "?")[0].toUpperCase(); }
   $("#pfpv").classList.remove("hide");
 }
@@ -864,8 +886,8 @@ function showMenu(x, y, cid, mid, m) {
   const mine = m.from === me.uid, adm = cur.type === "group" && isAdmin(groups[cur.id]);
   const it = (t, f, d, iconName) => { const b = h("button", "it" + (d ? " dg" : "")); if (iconName) b.append(ic(iconName)); b.append(document.createTextNode(t)); b.onclick = () => { hideMenu(); f(); }; M.append(b); };
   if (!m.deleted) it("Reply", () => startReply(mid, m), 0, "reply");
-  if (!m.voice && !m.kind && !m.share && !m.sstory && !m.media && !m.deleted) it("Copy", () => navigator.clipboard && navigator.clipboard.writeText(m.text), 0, "copy");
-  if (mine && !m.voice && !m.kind && !m.share && !m.sstory && !m.media && !m.deleted) it("Edit", () => { editing = { cid, mid }; $("#txt").value = m.text; $("#txt").placeholder = "Editing… (Esc to cancel)"; $("#txt").focus(); }, 0, "edit");
+  if (!m.voice && !m.kind && !m.share && !m.sstory && !m.mention && !m.media && !m.deleted) it("Copy", () => navigator.clipboard && navigator.clipboard.writeText(m.text), 0, "copy");
+  if (mine && !m.voice && !m.kind && !m.share && !m.sstory && !m.mention && !m.media && !m.deleted) it("Edit", () => { editing = { cid, mid }; $("#txt").value = m.text; $("#txt").placeholder = "Editing… (Esc to cancel)"; $("#txt").focus(); }, 0, "edit");
   it("Delete for me", () => set(ref(db, `chats/${cid}/messages/${mid}/del/${me.uid}`), true), 1, "trash");
   if (mine || adm) it("Delete for everyone", () => update(ref(db), { [`chats/${cid}/messages/${mid}/deleted`]: true, [`chats/${cid}/messages/${mid}/text`]: "", [`chats/${cid}/messages/${mid}/voice`]: null, [`chats/${cid}/messages/${mid}/media`]: null, [`chats/${cid}/messages/${mid}/reactions`]: null, [`chats/${cid}/audio/${mid}`]: null }), 1, "trash");
   M.classList.remove("hide");
@@ -891,6 +913,15 @@ function paint(cid, data) {
     if (m.deleted) { bub = h("div", "bub"); bub.append(ic("ban", "sm"), document.createTextNode(" This message was deleted")); }
     else if (m.voice) bub = player(cid, mid, m);
     else if (m.media) bub = mediaBub(m);
+    else if (m.mention === "comment") bub = mentionBub(m, "Mentioned you in a comment", () => openPost(m.pid));
+    else if (m.mention === "note") bub = mentionBub(m, "Mentioned you in their note", () => noteSheet(m.from));
+    else if (m.mention === "note-reply") bub = mentionBub(m, "Mentioned you replying to a note", () => noteSheet(m.noteUid));
+    else if (m.mention === "story") bub = storyMentionBub(m.from, m.sid, m.hid, "Mentioned you in their story");
+    else if (m.mention === "story-reply" || m.mention === "story-comment") {
+      const prev = storyMentionBub(m.storyUid, m.sid, m.hid, m.mention === "story-reply" ? "Mentioned you replying to a story" : "Mentioned you commenting on a story");
+      const sb2 = h("div", "bub"); sb2.append(mentionFrag(m.text, null));
+      const wrap = h("div", "srwrap"); wrap.append(prev, sb2); bub = wrap;
+    }
     else if (m.share) bub = shareBub(m.share);
     else if (m.sstory) {
       const prev = storyBub(m.sstory, !!m.storyReply);
@@ -1066,7 +1097,7 @@ function noteSheet(uid) {
     chips(cr, [0, 1, 2, 3, 4, 5], col, v => { col = v; draw(); }, k => nstyle(k)[0]);
     chips(er, ["\u2013", "😍", "🔥", "😴", "🎧", "🥳", "💀", "✨"], emo || "\u2013", v => { emo = v === "\u2013" ? "" : v; draw(); });
     const go = h("button", "btn", n ? "Update note" : "Share note");
-    go.onclick = async () => { const t = i.value.trim(); if (!t) return; await set(ref(db, "notes/" + me.uid), { text: t, c: col, emoji: emo, ts: serverTimestamp() }); M.classList.add("hide"); if (n) { toast("New note shared — likes reset"); setTimeout(() => toast(""), 1800); } };
+    go.onclick = async () => { const t = i.value.trim(); if (!t) return; await set(ref(db, "notes/" + me.uid), { text: t, c: col, emoji: emo, ts: serverTimestamp() }); notifyMentions(t, "note"); M.classList.add("hide"); if (n) { toast("New note shared — likes reset"); setTimeout(() => toast(""), 1800); } };
     i.oninput = draw; i.onkeydown = e => { if (e.key === "Enter") go.click(); }; draw();
     C.append(pv, i, h("div", "sub", "Bubble colour"), cr, h("div", "sub", "Emoji on top"), er, go);
     if (n) {
@@ -1081,9 +1112,11 @@ function noteSheet(uid) {
     const lref = ref(db, `notes/${uid}/likes/${me.uid}`), lb = h("button", "ib"), row = h("div", "stcin"), go = h("button", "btn", "Send reply"), pf = h("button", "btn ghost", "View profile"); let lk = !!(n.likes && n.likes[me.uid]);
     const paint = () => { lb.innerHTML = ""; lb.append(ic("heart", lk ? "fill" : "")); lb.style.color = lk ? "#ff5c9d" : ""; }; paint(); lb.setAttribute("aria-label", "Like note");
     lb.onclick = () => { lk = !lk; paint(); lk ? set(lref, true) : remove(lref); };
-    go.onclick = async () => { const t = i.value.trim(); if (!t) return; go.disabled = true; try { const c = { id: uid, type: "user" }, cid = chatId(c); await push(ref(db, `chats/${cid}/messages`), { from: me.uid, text: `\u21a9 Note: "${n.text}"\n${t}`, ts: serverTimestamp() }); await bump(c, cid); M.classList.add("hide"); toast("Reply sent"); setTimeout(() => toast(""), 1200); } catch (e) { go.disabled = false; alert(e.message || e); } };
+    go.onclick = async () => { const t = i.value.trim(); if (!t) return; go.disabled = true; try { const c = { id: uid, type: "user" }, cid = chatId(c); await push(ref(db, `chats/${cid}/messages`), { from: me.uid, text: `\u21a9 Note: "${n.text}"\n${t}`, ts: serverTimestamp() }); await bump(c, cid); notifyMentions(t, "note-reply", { noteUid: uid, exclude: uid }); M.classList.add("hide"); toast("Reply sent"); setTimeout(() => toast(""), 1200); } catch (e) { go.disabled = false; alert(e.message || e); } };
     pf.onclick = () => { M.classList.add("hide"); openProfile(uid, null); }; i.onkeydown = e => { if (e.key === "Enter") go.click(); };
-    row.append(i, lb); C.append(pv, row, go, pf);
+    const mb = h("button", "mentionBackBtn"); mb.append(ic("reply", "sm"), document.createTextNode("Mention " + dn(uid) + " back"));
+    mb.onclick = () => { const tag = "@" + mHandle(u0) + " "; i.value = i.value.startsWith(tag) ? i.value : tag + i.value; i.focus(); i.setSelectionRange(i.value.length, i.value.length); };
+    row.append(i, lb); C.append(pv, row, mb, go, pf);
   }
   M.classList.remove("hide"); i.focus();
 }
@@ -1254,10 +1287,10 @@ const pickFiles = (accept, multi, cb, capture) => { const f = document.createEle
 const toast = t => { const e = $("#toast"); e.textContent = t; e.classList.toggle("hide", !t); };
 const BLANK = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='3'%3E%3Crect fill='%23222' width='4' height='3'/%3E%3C/svg%3E";
 function mEl(it, cls) { const e = document.createElement("img"); e.alt = ""; e.loading = "lazy"; e.src = it.kind === "video" ? (it.poster || BLANK) : it.url; if (cls) e.className = cls; return e; }
-function setSrc(e, url) {
+function setSrc(e, url, quiet) {
   if (!url.startsWith("vid:")) { e.src = url; return; }
-  toast("Loading video…");
-  get(ref(db, "vids/" + url.slice(4))).then(sn => { toast(""); if (sn.exists()) e.src = sn.val(); else alert("This video is no longer available."); }).catch(() => { toast(""); alert("Couldn't load the video."); });
+  if (!quiet) toast("Loading video…");
+  get(ref(db, "vids/" + url.slice(4))).then(sn => { if (!quiet) toast(""); if (sn.exists()) e.src = sn.val(); else alert("This video is no longer available."); }).catch(() => { if (!quiet) toast(""); alert("Couldn't load the video."); });
 }
 const poster = file => new Promise(ok => {
   const v = document.createElement("video"), u = URL.createObjectURL(file);
@@ -1321,22 +1354,70 @@ async function upload(file) {
   }
   throw new Error("Only photos and videos are supported.");
 }
-let lbI = [], lbX = 0, sx = 0;
-function lbShow() {
-  const it = lbI[lbX], c = $("#lbc"), e = document.createElement(it.kind === "video" ? "video" : "img"); c.innerHTML = ""; setSrc(e, it.url); if (it.kind === "video" && it.poster) e.poster = it.poster;
-  if (it.kind === "video") { e.controls = true; e.autoplay = true; e.playsInline = true; }
-  c.append(e); $("#lbi").textContent = lbI.length > 1 ? `${lbX + 1} / ${lbI.length}` : "";
-  $("#lbp").classList.toggle("hide", lbX === 0); $("#lbn").classList.toggle("hide", lbX === lbI.length - 1);
+let lbI = [], lbX = 0, lbPid = null, sx = 0;
+const SPEEDS = [1, 1.25, 1.5, 2, 0.5];
+function toggleLike(pid) {
+  const on = !!(((posts[pid] || {}).likes || {})[me.uid]), r = ref(db, `posts/${pid}/likes/${me.uid}`);
+  return on ? remove(r) : set(r, true);
 }
-function lightbox(items, i) { lbI = items; lbX = i; lbShow(); $("#lb").classList.remove("hide"); }
-const lbClose = () => { $("#lb").classList.add("hide"); $("#lbc").innerHTML = ""; };
+function lbShow() {
+  const it = lbI[lbX], c = $("#lbc"), ctl = $("#lbctl"); c.innerHTML = ""; ctl.innerHTML = "";
+  const isVid = it.kind === "video";
+  const spin = h("div", "lbSpinner"); c.append(spin);
+  const e = document.createElement(isVid ? "video" : "img");
+  e.alt = ""; setSrc(e, it.url, true); if (isVid && it.poster) e.poster = it.poster;
+  if (isVid) { e.playsInline = true; e.autoplay = true; }
+  const ready = () => spin.remove();
+  e.onerror = ready;
+  if (isVid) e.addEventListener("loadeddata", ready, { once: true }); else { e.onload = ready; if (e.complete && e.naturalWidth) ready(); }
+  c.append(e);
+  $("#lbi").textContent = lbI.length > 1 ? `${lbX + 1} / ${lbI.length}` : "";
+  $("#lbp").classList.toggle("hide", lbX === 0); $("#lbn").classList.toggle("hide", lbX === lbI.length - 1);
+
+  if (isVid) {
+    const big = h("button", "lbBigPlay");
+    const syncBig = () => { big.classList.toggle("show", e.paused); big.innerHTML = ""; big.append(ic(e.paused ? "play" : "pause", "fill lg")); };
+    big.onclick = () => { e.paused ? e.play().catch(() => {}) : e.pause(); };
+    e.onclick = big.onclick;
+    e.addEventListener("play", syncBig); e.addEventListener("pause", syncBig);
+    syncBig(); c.append(big);
+    const vc = h("div", "lbVC");
+    const pp = h("button", "ib"); pp.append(ic("pause"));
+    pp.onclick = big.onclick;
+    e.onplay = () => { pp.innerHTML = ""; pp.append(ic("pause")); syncBig(); };
+    e.onpause = () => { pp.innerHTML = ""; pp.append(ic("play")); syncBig(); };
+    const seek = h("div", "lbSeek"), bar = h("div"); bar.style.cssText = "position:absolute;left:0;top:0;bottom:0;background:var(--g);border-radius:2px;width:0%"; seek.append(bar);
+    const fmt = s => { s = Math.max(0, s | 0); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+    const tm = h("span", "lbTime", "0:00 / 0:00");
+    e.ontimeupdate = () => { if (e.duration) { bar.style.width = (e.currentTime / e.duration * 100) + "%"; tm.textContent = fmt(e.currentTime) + " / " + fmt(e.duration); } };
+    seek.onclick = ev => { const r = seek.getBoundingClientRect(); if (e.duration) e.currentTime = (ev.clientX - r.left) / r.width * e.duration; };
+    let sIdx = 0;
+    const speed = h("button", "lbSpeed", "1x");
+    speed.onclick = () => { sIdx = (sIdx + 1) % SPEEDS.length; e.playbackRate = SPEEDS[sIdx]; speed.textContent = SPEEDS[sIdx] + "x"; };
+    vc.append(pp, tm, seek, speed); ctl.append(vc);
+  }
+  if (lbPid) {
+    const p = posts[lbPid] || {}, liked = !!((p.likes || {})[me.uid]);
+    const acts = h("div", "lbActs" + (isVid ? " withvc" : ""));
+    const lb2 = h("button", liked ? "on" : "");
+    lb2.append(ic("heart", liked ? "fill" : ""), h("span", "", "Like"));
+    lb2.onclick = () => { const nowOn = !lb2.classList.contains("on"); lb2.classList.toggle("on", nowOn); lb2.innerHTML = ""; lb2.append(ic("heart", nowOn ? "fill" : ""), h("span", "", "Like")); toggleLike(lbPid); };
+    const cb2 = h("button", ""); cb2.append(ic("comment"), h("span", "", "Comment"));
+    cb2.onclick = () => { openC.add(lbPid); lbClose(); openPost(lbPid); };
+    const sb2 = h("button", ""); sb2.append(ic("share"), h("span", "", "Share"));
+    sb2.onclick = () => sharePost(lbPid);
+    acts.append(lb2, cb2, sb2); ctl.append(acts);
+  }
+}
+function lightbox(items, i, pid) { lbI = items; lbX = i; lbPid = pid || null; lbShow(); $("#lb").classList.remove("hide"); }
+const lbClose = () => { $("#lb").classList.add("hide"); $("#lbc").innerHTML = ""; $("#lbctl").innerHTML = ""; };
 const lbGo = d => { const n = lbX + d; if (n >= 0 && n < lbI.length) { lbX = n; lbShow(); } };
 $("#lbx").onclick = lbClose; $("#lbp").onclick = () => lbGo(-1); $("#lbn").onclick = () => lbGo(1);
 $("#lbc").onclick = e => { if (e.target.id === "lbc") lbClose(); };
 $("#lbc").addEventListener("touchstart", e => sx = e.touches[0].clientX);
 $("#lbc").addEventListener("touchend", e => { const d = e.changedTouches[0].clientX - sx; if (Math.abs(d) > 60) lbGo(d < 0 ? 1 : -1); });
 addEventListener("keydown", e => { if ($("#lb").classList.contains("hide")) return; if (e.key === "Escape") lbClose(); if (e.key === "ArrowLeft") lbGo(-1); if (e.key === "ArrowRight") lbGo(1); });
-function carousel(items, onLike) {
+function carousel(items, onLike, pid) {
   const w = h("div", "cw"), c = h("div", "car"), n = h("span", "cnt", `1/${items.length}`);
   const MINH = 240, MAXH = 560, ratios = items.map(() => null);
   let active = 0;
@@ -1351,7 +1432,7 @@ function carousel(items, onLike) {
     const measure = () => { if (img.naturalWidth && img.naturalHeight) { ratios[i] = img.naturalWidth / img.naturalHeight; if (i === active) applyHeight(i); } };
     if (img.complete && img.naturalWidth) measure(); else img.onload = measure;
     f.append(img); if (it.kind === "video") { const pl = h("span", "play"); pl.append(ic("play", "fill")); f.append(pl); }
-    let tm; f.onclick = () => { clearTimeout(tm); tm = setTimeout(() => lightbox(items, i), 260); };
+    let tm; f.onclick = () => { clearTimeout(tm); tm = setTimeout(() => lightbox(items, i, pid), 260); };
     f.ondblclick = () => { clearTimeout(tm); if (onLike) onLike(w); }; c.append(f);
   });
   c.onscroll = () => {
@@ -1461,14 +1542,54 @@ function openPost(pid, back) {
   refresh();
 }
 const mHandle = u => (u.username || (u.name || "user").toLowerCase().replace(/[^a-z0-9_.]+/g, "")) || "user";
-function mentionFrag(text, back) {
+function mentionFragClick(text, onHit) {
   const frag = document.createDocumentFragment(), parts = (text || "").split(/(@[a-z0-9_.]+)/gi);
   parts.forEach(part => {
     const mm = /^@([a-z0-9_.]+)$/i.exec(part), hit = mm && Object.entries(users).find(([, u]) => mHandle(u).toLowerCase() === mm[1].toLowerCase());
-    if (hit) { const s = h("span", "mention", part); s.onclick = e => { e.stopPropagation(); openProfile(hit[0], back); }; frag.append(s); }
+    if (hit) { const s = h("span", "mention", part); s.onclick = e => { e.stopPropagation(); onHit(hit[0]); }; frag.append(s); }
     else frag.append(document.createTextNode(part));
   });
   return frag;
+}
+function mentionFrag(text, back) { return mentionFragClick(text, uid => openProfile(uid, back)); }
+/* ---------- @mention → notify mentioned people ---------- */
+function mentionedIds(text) {
+  const found = new Set();
+  (text || "").replace(/@([a-z0-9_.]+)/gi, (m0, uname) => {
+    const hit = Object.entries(users).find(([id, u]) => id !== me.uid && mHandle(u).toLowerCase() === uname.toLowerCase());
+    if (hit) found.add(hit[0]);
+    return m0;
+  });
+  return [...found];
+}
+async function notifyMentions(text, kind, extra) {
+  extra = extra || {};
+  const ids = mentionedIds(text).filter(id => !isBlk(id) && id !== extra.exclude);
+  for (const id of ids) {
+    try {
+      const c = { id, type: "user" }, cid = chatId(c);
+      const payload = { from: me.uid, mention: kind, text, ts: serverTimestamp() };
+      Object.entries(extra).forEach(([k, v]) => { if (k !== "exclude" && v != null) payload[k] = v; });
+      await push(ref(db, `chats/${cid}/messages`), payload);
+      await bump(c, cid);
+    } catch (e) { /* one failed mention shouldn't block the rest */ }
+  }
+}
+function storyMentionBub(uid, sid, hid, label) {
+  const b = h("div", "bub shp mtn");
+  const t = itemAt(uid, sid, hid);
+  if (!t) { b.style.padding = "10px 13px"; b.append(ic("ban", "sm"), document.createTextNode(" This story is no longer available")); return b; }
+  if (t.media) b.append(mEl(t.media)); else { const x = h("div", "", t.text || ""); x.style.cssText = `padding:30px 14px;text-align:center;font-weight:700;background:${BG[t.c | 0]}`; b.append(x); }
+  b.append(h("div", "sht mtnTag", "@\u00a0" + label));
+  b.onclick = () => openStoryById(uid, sid, hid);
+  return b;
+}
+function mentionBub(m, label, onClick) {
+  const b = h("div", "bub mtn");
+  b.append(h("div", "mtnTag", "@\u00a0" + label));
+  const t = h("div"); t.append(mentionFrag(m.text, null)); b.append(t);
+  if (onClick) b.onclick = e => { e.stopPropagation(); onClick(); };
+  return b;
 }
 /* ---------- @mention autocomplete (comments & notes) ---------- */
 const mdrop = h("div", "mdrop hide"); document.body.append(mdrop);
@@ -1541,7 +1662,7 @@ function postCard(pid, p, back) {
   c.append(hd);
   const lk = p.likes || {}, on = !!lk[me.uid], lref = ref(db, `posts/${pid}/likes/${me.uid}`), like = () => on ? remove(lref) : set(lref, true);
   const items = p.media || (p.img ? [{ url: p.img, kind: "image" }] : []);
-  if (items.length) c.append(carousel(items, w => { if (!on) like(); const x = h("div", "hp"); x.append(ic("heart", "fill lg")); w.append(x); setTimeout(() => x.remove(), 800); }));
+  if (items.length) c.append(carousel(items, w => { if (!on) like(); const x = h("div", "hp"); x.append(ic("heart", "fill lg")); w.append(x); setTimeout(() => x.remove(), 800); }, pid));
   const isCreator = p.uid === me.uid;
   const allC = Object.entries(p.comments || {}).filter(([, k]) => isCreator || !k.hidden).sort((a, b) => (a[1].ts || 0) - (b[1].ts || 0));
   const roots = allC.filter(([, k]) => !k.replyTo), repliesOf = cid => allC.filter(([, k]) => k.replyTo === cid);
@@ -1606,7 +1727,7 @@ function postCard(pid, p, back) {
       const ei = h("input", "cinp"), sv = h("button", "fb", "Save"), cnl = h("button", "fb gh", "Cancel");
       ei.maxLength = 300; attachMentions(ei);
       const closeEdit = () => { editRow.classList.add("hide"); textSpan.classList.remove("hide"); };
-      sv.onclick = async () => { const t = ei.value.trim(); if (!t) return; closeEdit(); await update(ref(db, `posts/${pid}/comments/${cid}`), { text: t, edited: true }); };
+      sv.onclick = async () => { const t = ei.value.trim(); if (!t) return; closeEdit(); await update(ref(db, `posts/${pid}/comments/${cid}`), { text: t, edited: true }); notifyMentions(t, "comment", { pid }); };
       ei.onkeydown = e => { if (e.key === "Enter") sv.onclick(); if (e.key === "Escape") closeEdit(); };
       cnl.onclick = closeEdit;
       editRow.append(ei, sv, cnl); wrap.append(editRow);
@@ -1642,6 +1763,7 @@ function postCard(pid, p, back) {
     const rc = replyCtx[pid], data = { uid: me.uid, text: t, ts: serverTimestamp() };
     if (rc) { data.replyTo = rc.cid; openReplies.add(pid + ":" + rc.cid); delete replyCtx[pid]; drawReplyBar(); }
     await push(ref(db, `posts/${pid}/comments`), data);
+    notifyMentions(t, "comment", { pid });
   };
   pb.onclick = go; inp.onkeydown = e => { if (e.key === "Enter") go(); };
   row.append(inp, pb); c.append(row); return c;
@@ -1769,6 +1891,16 @@ async function openFollowList(ownerId, kind, back) {
 let sv = null, stm = null, refreshComments = null;
 const liveList = uid => Object.entries(statuses[uid] || {}).filter(([, t]) => Date.now() - (t.ts || Date.now()) < 864e5).sort((x, y) => (x[1].ts || 0) - (y[1].ts || 0));
 const seenBy = t => !!(t.views && t.views[me.uid]);
+function openStoryById(uid, sid, hid) {
+  if (hid) {
+    const L = hlEntries(hlOf(uid, hid)), idx = L.findIndex(([id]) => id === sid);
+    if (idx < 0) { toast("This story is no longer available"); setTimeout(() => toast(""), 1800); return; }
+    return hlStory(uid, hid, idx);
+  }
+  const L = liveList(uid), idx = L.findIndex(([id]) => id === sid);
+  if (idx < 0) { toast("This story is no longer available"); setTimeout(() => toast(""), 1800); return; }
+  story(uid, idx);
+}
 function cleanStories() { Object.entries(statuses[me.uid] || {}).forEach(([id, t]) => { if (Date.now() - (t.ts || Date.now()) > 864e5) remove(ref(db, `stories/${me.uid}/${id}`)); }); }
 function pauseStory() {
   if (sv) sv.paused = true;
@@ -1813,13 +1945,18 @@ function showStory() {
   let stTap = null;
   st.onclick = ev => { if (hp) return; clearTimeout(stTap); const x = ev.clientX; stTap = setTimeout(() => { const r = st.getBoundingClientRect(); x - r.left < r.width * 0.35 ? prevStory() : nextStory(); }, 220); };
   const run = (ms, timer) => { if (started || !sv) return; started = true; requestAnimationFrame(() => { if (!sv) return; sv.bar.style.transition = `width ${ms}ms linear`; sv.bar.style.width = "100%"; if (timer) stm = setTimeout(nextStory, ms); }); };
+  let mentionBackFn = null;
+  const onMentionTap = tuid => {
+    if (tuid === me.uid) { pauseStory(); if (mentionBackFn) mentionBackFn(); else { toast("That's a mention of you"); setTimeout(() => toast(""), 1200); } return; }
+    closeStory(); openProfile(tuid, null);
+  };
   if (t.media) {
     const wr = h("div", "swr"), e = document.createElement(t.media.kind === "video" ? "video" : "img");
     if (t.media.kind === "video") { e.playsInline = true; e.autoplay = true; e.onloadedmetadata = () => run(Math.min(30, e.duration || 10) * 1000, false); e.onended = nextStory; e.onerror = () => { clearTimeout(stm); stm = setTimeout(nextStory, 1500); }; e.onloadeddata = () => e.play().catch(() => { e.muted = true; e.play().catch(() => {}); }); }
     else { e.onload = () => run(5000, true); e.onerror = () => run(3000, true); }
-    setSrc(e, t.media.url); wr.append(e); if (t.text) wr.append(ovl(t)); st.append(wr);
-  } else { st.style.background = BG[t.c | 0]; st.append(t.oy == null ? h("div", "stt", t.text || "") : ovl(t)); run(5000, true); }
-  const ft = h("div", "sft");
+    setSrc(e, t.media.url); wr.append(e); if (t.text) wr.append(ovl(t, onMentionTap)); st.append(wr);
+  } else { st.style.background = BG[t.c | 0]; st.append(t.oy == null ? h("div", "stt", t.text || "") : ovl(t, onMentionTap)); run(5000, true); }
+  const ft = h("div", "sft"); let mtagEl = null;
   if (own) {
     ft.classList.add("own");
     const sx = (icon, n, fn, fill) => { const b = h("button", "sx"); b.append(ic(icon, fill ? "fill" : ""), h("span", "", String(n))); b.onclick = ev => { ev.stopPropagation(); pauseStory(); fn(); }; ft.append(b); };
@@ -1833,17 +1970,25 @@ function showStory() {
     const rin = document.createElement("input"); rin.className = "sreply"; rin.placeholder = `Reply to ${u.name || "Bro"}…`; rin.maxLength = 300;
     rin.onclick = ev => ev.stopPropagation(); rin.onfocus = pauseStory; rin.onblur = resumeStory;
     rin.onkeydown = ev => { ev.stopPropagation(); if (ev.key === "Enter") sendReply(); };
+    attachMentions(rin);
     const lb = h("button", "act"), cb = h("button", "act"), shb2 = h("button", "act"), sb = h("button", "act");
     lb.append(ic("heart", lk ? "fill" : "")); cb.append(ic("comment")); shb2.append(ic("share")); sb.append(ic("send"));
     lb.setAttribute("aria-label", "Like"); cb.setAttribute("aria-label", "Comments"); shb2.setAttribute("aria-label", "Share story"); sb.setAttribute("aria-label", "Send reply");
     lb.onclick = ev => { ev.stopPropagation(); if (lk) { lk = false; lb.innerHTML = ""; lb.append(ic("heart")); remove(r); } else doLike(); };
     cb.onclick = ev => { ev.stopPropagation(); pauseStory(); storyComments(uid, id, HID); };
     shb2.onclick = ev => { ev.stopPropagation(); pauseStory(); sharePost(uid, id, HID); };
+    const mentionBack = () => { pauseStory(); const tag = "@" + mHandle(u) + " "; if (!rin.value.startsWith(tag)) rin.value = tag + rin.value; rin.focus(); rin.setSelectionRange(rin.value.length, rin.value.length); };
+    mentionBackFn = mentionBack;
+    if (mentionedIds(t.text || "").includes(me.uid)) {
+      const mtag = h("div", "storyMtag"); mtag.append(ic("reply", "sm"), document.createTextNode((u.name || "They") + " mentioned you — tap to mention back"));
+      mtag.onclick = ev => { ev.stopPropagation(); mentionBack(); };
+      mtagEl = mtag;
+    }
     const sendReply = async () => {
       const text = rin.value.trim(); if (!text) return;
       if (!mutual(uid)) { toast("Follow each other to reply"); setTimeout(() => toast(""), 1800); return; }
       sb.disabled = true;
-      try { const c = { id: uid, type: "user" }, cid = chatId(c); await push(ref(db, `chats/${cid}/messages`), { from: me.uid, sstory: { uid, sid: id, ...(HID ? { hid: HID } : {}) }, storyReply: true, text, ts: serverTimestamp() }); await bump(c, cid); rin.value = ""; toast("Reply sent"); setTimeout(() => toast(""), 1200); }
+      try { const c = { id: uid, type: "user" }, cid = chatId(c); await push(ref(db, `chats/${cid}/messages`), { from: me.uid, sstory: { uid, sid: id, ...(HID ? { hid: HID } : {}) }, storyReply: true, text, ts: serverTimestamp() }); await bump(c, cid); notifyMentions(text, "story-reply", { storyUid: uid, sid: id, hid: HID || null, exclude: uid }); rin.value = ""; toast("Reply sent"); setTimeout(() => toast(""), 1200); }
       catch (e) { alert(e.message || e); } finally { sb.disabled = false; }
     };
     sb.onclick = ev => { ev.stopPropagation(); sendReply(); };
@@ -1851,7 +1996,7 @@ function showStory() {
     st.ondblclick = ev => { clearTimeout(stTap); doLike(); const x = h("div", "hp"); x.append(ic("heart", "fill lg")); st.append(x); setTimeout(() => x.remove(), 800); };
     if (!seenBy(t)) set(ref(db, ipath(uid, id, HID) + "/views/" + me.uid), serverTimestamp());
   }
-  S.append(bars, hd, st, ft);
+  S.append(bars, hd, ...(mtagEl ? [mtagEl] : []), st, ft);
 }
 function viewers(t) {
   const C = $("#shc"), vs = Object.keys(t.views || {}).sort((a, b) => t.views[b] - t.views[a]); C.innerHTML = "";
@@ -1882,7 +2027,7 @@ function storyComments(uid, sid, hid) {
     C.append(list);
     const row = h("div", "stcin"), inp = h("input"), pb = h("button", "fb", "Post");
     inp.placeholder = "Add a comment…"; inp.maxLength = 300; attachMentions(inp);
-    const go = async () => { const txt = inp.value.trim(); if (!txt) return; inp.value = ""; try { await push(ref(db, ipath(uid, sid, hid) + "/comments"), { from: me.uid, text: txt, ts: serverTimestamp() }); } catch (e) { alert(e.message || e); } };
+    const go = async () => { const txt = inp.value.trim(); if (!txt) return; inp.value = ""; try { await push(ref(db, ipath(uid, sid, hid) + "/comments"), { from: me.uid, text: txt, ts: serverTimestamp() }); notifyMentions(txt, "story-comment", { storyUid: uid, sid, hid }); } catch (e) { alert(e.message || e); } };
     pb.onclick = go; inp.onkeydown = e => { if (e.key === "Enter") go(); };
     row.append(inp, pb); C.append(row);
   };
@@ -2000,6 +2145,7 @@ function openStatusAdd() {
       if (g.querySelector(".tedit")) return; R.classList.add("editing");
       const d = h("div", "tedit"), ta = document.createElement("textarea"), fr = h("div", "sw"), cr = h("div", "sw"), ok = h("button", "btn", "Done");
       ta.value = S.text; ta.maxLength = 120; ta.placeholder = "Type something…"; ok.style.maxWidth = "200px";
+      attachMentions(ta);
       const sty = () => { ta.style.fontFamily = ["Sora,system-ui,sans-serif", "Georgia,serif", "ui-monospace,monospace", "Sora,system-ui,sans-serif"][S.fs]; ta.style.fontStyle = S.fs === 1 ? "italic" : "normal"; ta.style.textTransform = S.fs === 3 ? "uppercase" : "none"; ta.style.color = S.hl ? "#111" : S.tc; ta.style.background = S.hl ? S.tc : "transparent"; };
       const drawF = () => { fr.innerHTML = ""; OV_FONTS.forEach((n, i) => fr.append(fb(n, S.fs === i, () => { S.fs = i; sty(); drawF(); }))); fr.append(fb("Highlight", S.hl, () => { S.hl = S.hl ? 0 : 1; sty(); drawF(); })); };
       chips(cr, OV_COLS, S.tc, v => { S.tc = v; sty(); }, k => k);
@@ -2016,7 +2162,9 @@ function openStatusAdd() {
       try {
         const p = { text: S.text, c: S.c, media: S.md ? { url: S.md.url, kind: S.md.kind, poster: S.md.poster || null } : null, ts: serverTimestamp() };
         if (S.text) Object.assign(p, { tc: S.tc, fs: S.fs, hl: S.hl, ox: Math.round(S.ox * 10) / 10, oy: Math.round(S.oy * 10) / 10 });
-        await push(ref(db, `stories/${me.uid}`), p); close(); toast("Story shared"); setTimeout(() => toast(""), 1400);
+        const r = push(ref(db, `stories/${me.uid}`)); await set(r, p);
+        if (S.text) notifyMentions(S.text, "story", { sid: r.key });
+        close(); toast("Story shared"); setTimeout(() => toast(""), 1400);
       } catch (e) { go.disabled = false; go.textContent = "Share"; alert(e.message || e); }
     };
     st.append(g); bar.append(pill, go); R.append(t, st, bar); draw(); if (openText) textEd();
@@ -2036,10 +2184,11 @@ function renderStrip(S) {
   });
 }
 /* ---------- share posts, photo adjust, story text ---------- */
-function ovl(o) {
-  const e = h("div", "ov" + (o.fs ? " f" + o.fs : "") + (o.hl ? " hl" : ""), o.text || ""), c = o.tc || "#ffffff", y = o.oy != null ? o.oy : [12, 50, 88][o.pos == null ? 2 : o.pos];
+function ovl(o, onMention) {
+  const e = h("div", "ov" + (o.fs ? " f" + o.fs : "") + (o.hl ? " hl" : "")), c = o.tc || "#ffffff", y = o.oy != null ? o.oy : [12, 50, 88][o.pos == null ? 2 : o.pos];
   e.style.cssText = `left:${o.ox != null ? o.ox : 50}%;top:${y}%;transform:translate(-50%,-50%);color:${o.hl ? "#111" : c}` + (o.hl ? `;background:${c}` : "");
   if (!o.text) e.classList.add("hide");
+  if (onMention) e.append(mentionFragClick(o.text, onMention)); else e.textContent = o.text || "";
   return e;
 }
 function shareBub(pid) {
