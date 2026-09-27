@@ -303,7 +303,7 @@ textarea{font:inherit;font-size:16px;color:var(--txt);background:var(--in);borde
 .addtile{background:var(--in)!important;border:2px dashed var(--a);color:var(--a)}
 .addtile .icon{width:22px;height:22px}
 .stats{display:flex;gap:28px;justify-content:center}.stats div{font-weight:700;font-size:18px;text-align:center}.stats small{display:block;font-weight:400;font-size:12px;color:var(--mut)}
-#shr,#ask{z-index:30}
+#shr,#ask{z-index:42}
 .fb{padding:6px 12px;border-radius:20px;background:var(--g);font-size:12px;font-weight:600;flex:none;white-space:nowrap}
 .fb.gh{background:var(--in);color:var(--mut)}
 #nsr{display:flex;align-items:flex-end;gap:10px;overflow-x:auto;padding:2px 12px 8px;flex:none;scrollbar-width:none}#nsr::-webkit-scrollbar{display:none}
@@ -1309,7 +1309,7 @@ let back = null, refresh = null;
 const sheet = $("#sheet");
 function closeSheet() { $("#tabs").classList.add("hide"); sheet.classList.add("hide"); refresh = null; back = null; }
 $("#shx").onclick = () => back ? back() : closeSheet();
-const refreshSheet = () => { if (refresh && !sheet.classList.contains("hide")) refresh(); };
+const refreshSheet = () => { if (refresh && !sheet.classList.contains("hide")) refresh(); if (refreshComments) refreshComments(); };
 function showSheet(title, bk) { $("#tabs").classList.add("hide"); $("#sht").textContent = title; $("#shb").innerHTML = ""; back = bk || null; sheet.classList.remove("hide"); sheet.scrollTop = 0; return $("#shb"); }
 const resize = (file, max, q) => new Promise((ok, no) => { const i = new Image(); i.onload = () => { const k = Math.min(1, max / Math.max(i.width, i.height)), c = document.createElement("canvas"); c.width = i.width * k; c.height = i.height * k; c.getContext("2d").drawImage(i, 0, 0, c.width, c.height); ok(c.toDataURL("image/jpeg", q)); }; i.onerror = no; i.src = URL.createObjectURL(file); });
 const pickFiles = (accept, multi, cb, capture) => { const f = document.createElement("input"); f.type = "file"; f.accept = accept; f.multiple = multi; if (capture) f.capture = capture; f.onchange = () => f.files.length && cb(f.files); f.click(); };
@@ -1432,7 +1432,7 @@ function lbShow() {
     lb2.append(ic("heart", liked ? "fill" : ""), h("span", "", "Like"));
     lb2.onclick = () => { const nowOn = !lb2.classList.contains("on"); lb2.classList.toggle("on", nowOn); lb2.innerHTML = ""; lb2.append(ic("heart", nowOn ? "fill" : ""), h("span", "", "Like")); toggleLike(lbPid); };
     const cb2 = h("button", ""); cb2.append(ic("comment"), h("span", "", "Comment"));
-    cb2.onclick = () => { openC.add(lbPid); lbClose(); openPost(lbPid); };
+    cb2.onclick = () => postComments(lbPid);
     const sb2 = h("button", ""); sb2.append(ic("share"), h("span", "", "Share"));
     sb2.onclick = () => sharePost(lbPid);
     acts.append(lb2, cb2, sb2); ctl.append(acts);
@@ -2317,6 +2317,97 @@ function shareBub(pid) {
   const t = h("div", "sht", u.name || "Bro"); t.append(h("div", "sm", (p.text || "Shared a post").slice(0, 80))); b.append(t);
   b.onclick = () => openPost(pid, null);
   return b;
+}
+function postComments(pid) {
+  const M = $("#shr"), C = $("#shc");
+  const draw = () => {
+    const p = posts[pid];
+    if (!p) { if (missingPosts[pid]) M.classList.add("hide"); else ensurePost(pid); return; }
+    if (document.activeElement && C.contains(document.activeElement)) return; // don't nuke focus/typed text on live updates
+    C.innerHTML = "";
+    const hdr = h("div", "hlhd"); hdr.append(h("b", "", "Comments"));
+    const xbh = h("button", "ib"); xbh.append(ic("close", "sm")); xbh.setAttribute("aria-label", "Close"); xbh.onclick = () => M.classList.add("hide"); hdr.append(xbh);
+    C.append(hdr);
+    const isCreator = p.uid === me.uid;
+    const allC = Object.entries(p.comments || {}).filter(([, k]) => isCreator || !k.hidden).sort((a, b) => (a[1].ts || 0) - (b[1].ts || 0));
+    const roots = allC.filter(([, k]) => !k.replyTo), repliesOf = cid => allC.filter(([, k]) => k.replyTo === cid);
+    const list = h("div", "hlclist");
+    if (!roots.length) list.append(h("div", "empty", "No comments yet. Be the first to comment."));
+    const goProfile = uid => { M.classList.add("hide"); lbClose(); openProfile(uid, null); };
+    const delComment = (cid, isReply) => { const updates = {}; updates[`posts/${pid}/comments/${cid}`] = null; if (!isReply) repliesOf(cid).forEach(([rcid]) => { updates[`posts/${pid}/comments/${rcid}`] = null; }); update(ref(db), updates); };
+    const inp = h("input"), pb = h("button", "fb", "Post"), rbWrap = h("div");
+    attachMentions(inp);
+    const drawReplyBar = () => {
+      rbWrap.innerHTML = ""; const rc = replyCtx[pid];
+      inp.placeholder = rc ? `Reply to ${rc.name}…` : "Add a comment…";
+      if (!rc) return;
+      const bar = h("div", "replybar"), line = h("div", "rl"), body = h("div", "rb");
+      body.append(h("div", "rw", "Replying to " + rc.name));
+      const xb2 = h("button", "ib"); xb2.append(ic("close", "sm")); xb2.setAttribute("aria-label", "Cancel reply");
+      xb2.onclick = () => { delete replyCtx[pid]; drawReplyBar(); };
+      bar.append(line, body, xb2); rbWrap.append(bar);
+    };
+    const startReply = (rootCid, name, mention) => {
+      replyCtx[pid] = { cid: rootCid, name };
+      if (mention) { inp.value = mention + " "; setTimeout(() => inp.setSelectionRange(inp.value.length, inp.value.length), 0); }
+      drawReplyBar(); inp.focus();
+    };
+    const renderComment = (cid, k, isReply) => {
+      const mine = k.uid === me.uid, ku = users[k.uid] || {}, wrap = h("div", isReply ? "cmt reply" : "cmt");
+      if (k.hidden) wrap.classList.add("hid");
+      const r = h("div", "cap"), a = avatar(ku.name, ku.photo), b = h("b", "", (mine ? "You" : ku.name || "Bro") + " ");
+      a.style.cssText = "width:22px;height:22px;font-size:11px;display:inline-grid;vertical-align:middle;margin-right:6px;cursor:pointer";
+      b.style.cursor = "pointer"; a.onclick = b.onclick = () => goProfile(k.uid);
+      const textSpan = h("span", "ctext");
+      textSpan.append(mentionFragClick(k.text, goProfile));
+      if (k.edited) textSpan.append(h("span", "sm", " (edited)"));
+      if (k.hidden) textSpan.append(h("span", "sm", " · Hidden"));
+      r.append(a, b, textSpan); wrap.append(r);
+      const meta = h("div", "cmeta"), rlBtn = h("button", "rlink", "Reply");
+      meta.append(h("span", "", ago(k.ts)));
+      rlBtn.onclick = () => { const name = mine ? "You" : (ku.name || "Bro"); const mention = isReply ? "@" + mHandle(ku) : null; startReply(isReply ? k.replyTo : cid, name, mention); };
+      meta.append(rlBtn);
+      const editRow = h("div", "cin hide");
+      if (mine) {
+        const eb = h("button", "rlink", "Edit");
+        eb.onclick = () => { const opening = editRow.classList.contains("hide"); editRow.classList.toggle("hide"); textSpan.classList.toggle("hide", opening); if (opening) { ei.value = k.text; ei.focus(); } };
+        meta.append(eb);
+        const ei = h("input", "cinp"), svb = h("button", "fb", "Save"), cnl = h("button", "fb gh", "Cancel");
+        ei.maxLength = 300; attachMentions(ei);
+        const closeEdit = () => { editRow.classList.add("hide"); textSpan.classList.remove("hide"); };
+        svb.onclick = async () => { const t = ei.value.trim(); if (!t) return; closeEdit(); await update(ref(db, `posts/${pid}/comments/${cid}`), { text: t, edited: true }); notifyMentions(t, "comment", { pid }); };
+        ei.onkeydown = e => { if (e.key === "Enter") svb.onclick(); if (e.key === "Escape") closeEdit(); };
+        cnl.onclick = closeEdit;
+        editRow.append(ei, svb, cnl); wrap.append(editRow);
+      }
+      if (mine || isCreator) { const db2 = h("button", "rlink", "Delete"); db2.onclick = () => ask("Delete this comment?", "This can't be undone.", "Delete", () => delComment(cid, isReply)); meta.append(db2); }
+      if (isCreator && !mine) { const hb = h("button", "rlink", k.hidden ? "Unhide" : "Hide"); hb.onclick = () => update(ref(db, `posts/${pid}/comments/${cid}`), { hidden: !k.hidden }); meta.append(hb); }
+      wrap.append(meta); return wrap;
+    };
+    roots.forEach(([cid, k]) => {
+      list.append(renderComment(cid, k, false));
+      const rs = repliesOf(cid); if (!rs.length) return;
+      const key = pid + ":" + cid, open = openReplies.has(key), box = h("div", "replies" + (open ? "" : " hide"));
+      rs.forEach(([rcid, rk]) => box.append(renderComment(rcid, rk, true)));
+      const label = o => `${o ? "Hide" : "View"} ${o ? "" : rs.length + " "}repl${rs.length > 1 ? "ies" : "y"}`;
+      const tgl = h("button", "vc2 sm", label(open));
+      tgl.onclick = () => { const opening = box.classList.contains("hide"); box.classList.toggle("hide"); opening ? openReplies.add(key) : openReplies.delete(key); tgl.textContent = label(opening); };
+      list.append(tgl, box);
+    });
+    C.append(list, rbWrap); drawReplyBar();
+    const row = h("div", "stcin");
+    inp.maxLength = 300;
+    const go = async () => {
+      const t = inp.value.trim(); if (!t) return; inp.value = "";
+      const rc = replyCtx[pid], data = { uid: me.uid, text: t, ts: serverTimestamp() };
+      if (rc) { data.replyTo = rc.cid; openReplies.add(pid + ":" + rc.cid); delete replyCtx[pid]; drawReplyBar(); }
+      await push(ref(db, `posts/${pid}/comments`), data);
+      notifyMentions(t, "comment", { pid });
+    };
+    pb.onclick = go; inp.onkeydown = e => { if (e.key === "Enter") go(); };
+    row.append(inp, pb); C.append(row);
+  };
+  refreshComments = draw; draw(); M.classList.remove("hide");
 }
 function sharePost(pid, sid, hid) {
   const M = $("#shr"), C = $("#shc"); C.innerHTML = ""; C.append(h("b", "", "Share to…"));
