@@ -101,6 +101,16 @@ main{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(
 .mentionBackBtn{display:flex;align-items:center;gap:6px;justify-content:center;color:var(--a);font-weight:600;font-size:13px;padding:10px 0 2px}
 .storyMtag{display:flex;align-items:center;gap:8px;margin:0 14px 10px;padding:9px 12px;border-radius:14px;background:#ffffff22;color:#fff;font-size:12px;font-weight:600;cursor:pointer}
 .storyMtag:hover{background:#ffffff33}
+.repostTag{display:flex;align-items:center;gap:8px;margin:0 14px 6px;padding:8px 12px;border-radius:14px;background:#ffffff1a;border:1px solid #ffffff2e;color:#fff;font-size:12px;font-weight:700;cursor:pointer;width:fit-content}
+.repostTag:hover{background:#ffffff2e}
+.rpcard{position:absolute;width:52%;aspect-ratio:9/16;border-radius:18px;overflow:hidden;box-shadow:0 10px 30px #000a;border:2px solid #ffffff40;touch-action:none;user-select:none}
+.rpcard.tap{cursor:pointer}
+.rpcard-in{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#111;overflow:hidden}
+.rpcard-in img,.rpcard-in video{width:100%;height:100%;object-fit:cover}
+.rpcard-tx{padding:14px;text-align:center;font-weight:700;font-size:14px;color:#fff;word-break:break-word}
+.rpcard-who{position:absolute;top:8px;left:8px;right:8px;display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:#fff;text-shadow:0 1px 4px #000}
+.rpcard-who .av{width:18px;height:18px;font-size:9px}
+.rpcard-who span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bwrap{display:flex;flex-direction:column;max-width:100%}
 .swrow{position:relative;display:flex;touch-action:pan-y}
 .swarrow{position:absolute;left:-30px;top:50%;transform:translateY(-50%);opacity:0;color:var(--a);pointer-events:none;width:20px;height:20px}
@@ -339,6 +349,10 @@ input{font-size:16px}
 .sct{display:flex;align-items:center;gap:8px;padding:10px 12px}.sct .ib{background:#ffffff22;color:#fff;font-weight:700}.sct .sp{flex:1}
 .scst{flex:1;min-height:0;display:grid;place-items:center;padding:0 8px}
 .stg{position:relative;aspect-ratio:9/16;height:100%;max-width:100%;border-radius:18px;overflow:hidden;background:#000;touch-action:none}.stg>img,.stg>video{width:100%;height:100%;object-fit:contain;display:block}.stg .ov{cursor:grab;touch-action:none;user-select:none}
+.sdel{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);width:54px;height:54px;border-radius:50%;background:#00000099;color:#fff;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .15s,transform .15s,background .15s;z-index:6}
+.sdel .icon{width:22px;height:22px}
+.sdel.show{opacity:1}
+.sdel.over{background:#ff3b30;transform:translateX(-50%) scale(1.3)}
 .scb{display:flex;align-items:center;gap:10px;padding:12px}.scb .pill{flex:1;display:flex;align-items:center;gap:10px;background:#ffffff22;border-radius:30px;padding:6px 16px 6px 6px;font-weight:600}.scb .pill .av{width:32px;height:32px;font-size:14px}.scb .go{background:var(--g);border-radius:30px;padding:13px 26px;font-weight:700;color:#fff}
 .scpk{display:grid;gap:12px;width:min(360px,100%);margin:auto;padding:20px}.scpk .btn{display:flex;align-items:center;gap:12px;padding:18px;font-size:16px}
 #scr.editing .sct,#scr.editing .scb{pointer-events:none;opacity:.35}
@@ -917,6 +931,7 @@ function paint(cid, data) {
     else if (m.mention === "note") bub = mentionBub(m, "Mentioned you in their note", () => noteSheet(m.from));
     else if (m.mention === "note-reply") bub = mentionBub(m, "Mentioned you replying to a note", () => noteSheet(m.noteUid));
     else if (m.mention === "story") bub = storyMentionBub(m.from, m.sid, m.hid, "Mentioned you in their story");
+    else if (m.mention === "story-repost") bub = storyMentionBub(m.from, m.sid, m.hid, "Mentioned you back with their story");
     else if (m.mention === "story-reply" || m.mention === "story-comment") {
       const prev = storyMentionBub(m.storyUid, m.sid, m.hid, m.mention === "story-reply" ? "Mentioned you replying to a story" : "Mentioned you commenting on a story");
       const sb2 = h("div", "bub"); sb2.append(mentionFrag(m.text, null));
@@ -1087,12 +1102,12 @@ function renderNotes() {
   tile(me.uid, live(notes[me.uid]) ? notes[me.uid] : null);
   Object.entries(notes).filter(([id, n]) => id !== me.uid && live(n) && mutual(id) && !isBlk(id)).sort((a, b) => (b[1].ts || 0) - (a[1].ts || 0)).forEach(([id, n]) => tile(id, n));
 }
-function noteSheet(uid) {
+function noteSheet(uid, prefill) {
   const M = $("#shr"), C = $("#shc"), n = notes[uid], own = uid === me.uid, u0 = users[uid] || {}, pv = h("div", "nt"), i = h("input"); C.innerHTML = ""; hlHead(C, M, own ? "Your note" : dn(uid) + "'s note");
   pv.style.cssText = "margin:4px auto 0;cursor:default;pointer-events:none";
   if (own) {
     let col = n ? n.c | 0 : 0, emo = n ? n.emoji || "" : "";
-    i.maxLength = 60; i.placeholder = "Share a thought\u2026 (@ to mention)"; i.value = n ? n.text : ""; attachMentions(i);
+    i.maxLength = 60; i.placeholder = "Share a thought\u2026 (@ to mention)"; i.value = n ? n.text : (prefill || ""); attachMentions(i);
     const draw = () => { pv.innerHTML = ""; pv.append(...noteEls({ text: i.value.trim() || "Your note", c: col, emoji: emo }), avatar(u0.name, u0.photo)); }, cr = h("div", "sw"), er = h("div", "sw");
     chips(cr, [0, 1, 2, 3, 4, 5], col, v => { col = v; draw(); }, k => nstyle(k)[0]);
     chips(er, ["\u2013", "😍", "🔥", "😴", "🎧", "🥳", "💀", "✨"], emo || "\u2013", v => { emo = v === "\u2013" ? "" : v; draw(); });
@@ -1114,9 +1129,14 @@ function noteSheet(uid) {
     lb.onclick = () => { lk = !lk; paint(); lk ? set(lref, true) : remove(lref); };
     go.onclick = async () => { const t = i.value.trim(); if (!t) return; go.disabled = true; try { const c = { id: uid, type: "user" }, cid = chatId(c); await push(ref(db, `chats/${cid}/messages`), { from: me.uid, text: `\u21a9 Note: "${n.text}"\n${t}`, ts: serverTimestamp() }); await bump(c, cid); notifyMentions(t, "note-reply", { noteUid: uid, exclude: uid }); M.classList.add("hide"); toast("Reply sent"); setTimeout(() => toast(""), 1200); } catch (e) { go.disabled = false; alert(e.message || e); } };
     pf.onclick = () => { M.classList.add("hide"); openProfile(uid, null); }; i.onkeydown = e => { if (e.key === "Enter") go.click(); };
-    const mb = h("button", "mentionBackBtn"); mb.append(ic("reply", "sm"), document.createTextNode("Mention " + dn(uid) + " back"));
-    mb.onclick = () => { const tag = "@" + mHandle(u0) + " "; i.value = i.value.startsWith(tag) ? i.value : tag + i.value; i.focus(); i.setSelectionRange(i.value.length, i.value.length); };
-    row.append(i, lb); C.append(pv, row, mb, go, pf);
+    const mentionBack = () => { M.classList.add("hide"); noteSheet(me.uid, "@" + mHandle(u0) + " "); };
+    const mentioned = mentionedIds(n.text || "").includes(me.uid);
+    let mtag = null, mb = null;
+    if (mentioned) {
+      mtag = h("div", "storyMtag"); mtag.append(ic("reply", "sm"), document.createTextNode((u0.name || "They") + " mentioned you \u2014 tap to mention back with your own note")); mtag.onclick = mentionBack;
+      mb = h("button", "mentionBackBtn"); mb.append(ic("reply", "sm"), document.createTextNode("Mention " + dn(uid) + " back")); mb.onclick = mentionBack;
+    }
+    row.append(i, lb); C.append(pv, ...(mtag ? [mtag] : []), row, ...(mb ? [mb] : []), go, pf);
   }
   M.classList.remove("hide"); i.focus();
 }
@@ -1447,7 +1467,7 @@ const hlOf = (uid, hid) => (hls[uid] || {})[hid];
 const hlSorted = uid => Object.entries(hls[uid] || {}).filter(([, x]) => hlEntries(x).length).sort((a, b) => (a[1].ts || 0) - (b[1].ts || 0));
 const itemAt = (uid, id, hid) => hid ? (hlEntries(hlOf(uid, hid)).find(([k]) => k === id) || [])[1] : (statuses[uid] || {})[id];
 const ipath = (uid, id, hid) => hid ? `highlights/${uid}/${hid}/items/${id}` : `stories/${uid}/${id}`;
-const hlItem = t => ({ text: t.text || "", c: t.c | 0, media: t.media ? { url: t.media.url, kind: t.media.kind, poster: t.media.poster || null } : null, pos: t.pos == null ? 2 : t.pos, tc: t.tc || "#ffffff", oy: t.oy == null ? null : t.oy, ox: t.ox == null ? null : t.ox, fs: t.fs | 0, hl: t.hl | 0, ts: t.ts || Date.now() });
+const hlItem = t => ({ text: t.text || "", c: t.c | 0, media: t.media ? { url: t.media.url, kind: t.media.kind, poster: t.media.poster || null } : null, pos: t.pos == null ? 2 : t.pos, tc: t.tc || "#ffffff", oy: t.oy == null ? null : t.oy, ox: t.ox == null ? null : t.ox, fs: t.fs | 0, hl: t.hl | 0, sc: t.sc || null, rp: t.rp || null, ts: t.ts || Date.now() });
 function coverEl(hl) {
   const L = hlEntries(hl), it = ((hl.cover && L.find(([k]) => k === hl.cover)) || L[0] || [])[1];
   if (!it) return h("div");
@@ -1556,7 +1576,7 @@ function mentionFrag(text, back) { return mentionFragClick(text, uid => openProf
 function mentionedIds(text) {
   const found = new Set();
   (text || "").replace(/@([a-z0-9_.]+)/gi, (m0, uname) => {
-    const hit = Object.entries(users).find(([id, u]) => id !== me.uid && mHandle(u).toLowerCase() === uname.toLowerCase());
+    const hit = Object.entries(users).find(([id, u]) => mHandle(u).toLowerCase() === uname.toLowerCase());
     if (hit) found.add(hit[0]);
     return m0;
   });
@@ -1564,7 +1584,7 @@ function mentionedIds(text) {
 }
 async function notifyMentions(text, kind, extra) {
   extra = extra || {};
-  const ids = mentionedIds(text).filter(id => !isBlk(id) && id !== extra.exclude);
+  const ids = mentionedIds(text).filter(id => id !== me.uid && !isBlk(id) && id !== extra.exclude);
   for (const id of ids) {
     try {
       const c = { id, type: "user" }, cid = chatId(c);
@@ -1954,8 +1974,10 @@ function showStory() {
     const wr = h("div", "swr"), e = document.createElement(t.media.kind === "video" ? "video" : "img");
     if (t.media.kind === "video") { e.playsInline = true; e.autoplay = true; e.onloadedmetadata = () => run(Math.min(30, e.duration || 10) * 1000, false); e.onended = nextStory; e.onerror = () => { clearTimeout(stm); stm = setTimeout(nextStory, 1500); }; e.onloadeddata = () => e.play().catch(() => { e.muted = true; e.play().catch(() => {}); }); }
     else { e.onload = () => run(5000, true); e.onerror = () => run(3000, true); }
-    setSrc(e, t.media.url); wr.append(e); if (t.text) wr.append(ovl(t, onMentionTap)); st.append(wr);
-  } else { st.style.background = BG[t.c | 0]; st.append(t.oy == null ? h("div", "stt", t.text || "") : ovl(t, onMentionTap)); run(5000, true); }
+    setSrc(e, t.media.url); wr.append(e); if (t.rp) wr.append(repostSticker(t.rp, true)); if (t.text) wr.append(ovl(t, onMentionTap)); st.append(wr);
+  } else { st.style.background = BG[t.c | 0]; if (t.rp) st.append(repostSticker(t.rp, true)); st.append(t.oy == null ? h("div", "stt", t.text || "") : ovl(t, onMentionTap)); run(5000, true); }
+  let repostTagEl = null;
+  if (t.rp) { const ru = users[t.rp.uid] || {}, rt = h("div", "repostTag"); rt.append(ic("reply", "sm"), document.createTextNode("Mention from " + (ru.name || "Bro"))); rt.onclick = ev => { ev.stopPropagation(); pauseStory(); closeStory(); openProfile(t.rp.uid, null); }; repostTagEl = rt; }
   const ft = h("div", "sft"); let mtagEl = null;
   if (own) {
     ft.classList.add("own");
@@ -1977,10 +1999,10 @@ function showStory() {
     lb.onclick = ev => { ev.stopPropagation(); if (lk) { lk = false; lb.innerHTML = ""; lb.append(ic("heart")); remove(r); } else doLike(); };
     cb.onclick = ev => { ev.stopPropagation(); pauseStory(); storyComments(uid, id, HID); };
     shb2.onclick = ev => { ev.stopPropagation(); pauseStory(); sharePost(uid, id, HID); };
-    const mentionBack = () => { pauseStory(); const tag = "@" + mHandle(u) + " "; if (!rin.value.startsWith(tag)) rin.value = tag + rin.value; rin.focus(); rin.setSelectionRange(rin.value.length, rin.value.length); };
+    const mentionBack = () => { const rp = { uid, sid: id, hid: HID || null, media: t.media || null, text: t.text || "", c: t.c | 0, tc: t.tc, fs: t.fs, hl: t.hl }; closeStory(); openStatusAdd(rp); };
     mentionBackFn = mentionBack;
     if (mentionedIds(t.text || "").includes(me.uid)) {
-      const mtag = h("div", "storyMtag"); mtag.append(ic("reply", "sm"), document.createTextNode((u.name || "They") + " mentioned you — tap to mention back"));
+      const mtag = h("div", "storyMtag"); mtag.append(ic("reply", "sm"), document.createTextNode((u.name || "They") + " mentioned you — tap to mention back with your own story"));
       mtag.onclick = ev => { ev.stopPropagation(); mentionBack(); };
       mtagEl = mtag;
     }
@@ -1996,7 +2018,7 @@ function showStory() {
     st.ondblclick = ev => { clearTimeout(stTap); doLike(); const x = h("div", "hp"); x.append(ic("heart", "fill lg")); st.append(x); setTimeout(() => x.remove(), 800); };
     if (!seenBy(t)) set(ref(db, ipath(uid, id, HID) + "/views/" + me.uid), serverTimestamp());
   }
-  S.append(bars, hd, ...(mtagEl ? [mtagEl] : []), st, ft);
+  S.append(bars, hd, ...(repostTagEl ? [repostTagEl] : []), ...(mtagEl ? [mtagEl] : []), st, ft);
 }
 function viewers(t) {
   const C = $("#shc"), vs = Object.keys(t.views || {}).sort((a, b) => t.views[b] - t.views[a]); C.innerHTML = "";
@@ -2052,8 +2074,10 @@ function storyBub(ss, replyMode) {
   return b;
 }
 const OV_FONTS = ["Sans", "Serif", "Mono", "Neon"], OV_COLS = ["#ffffff", "#ffe066", "#ff8fb1", "#7cf5c4", "#7cc4ff", "#000000"];
-function openStatusAdd() {
-  const S = { md: null, prev: null, mv: false, c: 0, text: "", tc: "#ffffff", fs: 0, hl: 0, ox: 50, oy: 50 }, R = $("#scr"); R.classList.remove("hide");
+function openStatusAdd(repost) {
+  const S = { md: null, prev: null, mv: false, c: 0, text: "", tc: "#ffffff", fs: 0, hl: 0, ox: 50, oy: 50, scale: 1,
+    rp: repost ? { uid: repost.uid, sid: repost.sid, hid: repost.hid || null, media: repost.media || null, text: repost.text || "", c: repost.c | 0, tc: repost.tc, fs: repost.fs, hl: repost.hl, ox: 50, oy: 40, scale: 1 } : null
+  }, R = $("#scr"); R.classList.remove("hide");
   const close = () => { if (S.stopCam) S.stopCam(); R.classList.remove("editing"); if (S.prev) URL.revokeObjectURL(S.prev); R.classList.add("hide"); R.innerHTML = ""; };
   const xb = fn => { const b = h("button", "ib"); b.append(ic("close")); b.setAttribute("aria-label", "Close"); b.onclick = fn; return b; };
   const fb = (l, on, fn) => { const b = h("button", "fb" + (on ? "" : " gh"), l); b.onclick = fn; return b; };
@@ -2135,10 +2159,14 @@ function openStatusAdd() {
     const draw = () => {
       g.innerHTML = ""; g.style.background = S.md ? "#000" : BG[S.c];
       if (S.md) { const e = document.createElement(S.mv ? "video" : "img"); e.src = S.prev; if (S.mv) { e.autoplay = e.muted = e.loop = e.playsInline = true; } g.append(e); }
-      const o = ovl({ text: S.text || (S.md ? "" : "Tap to write"), tc: S.tc, fs: S.fs, hl: S.hl, ox: S.ox, oy: S.oy });
-      o.onpointerdown = e => { o.setPointerCapture(e.pointerId); o._d = { x: e.clientX, y: e.clientY, m: 0 }; };
-      o.onpointermove = e => { if (!o._d) return; if (Math.abs(e.clientX - o._d.x) + Math.abs(e.clientY - o._d.y) > 6) o._d.m = 1; if (!o._d.m) return; const r = g.getBoundingClientRect(); S.ox = Math.max(8, Math.min(92, (e.clientX - r.left) / r.width * 100)); S.oy = Math.max(6, Math.min(94, (e.clientY - r.top) / r.height * 100)); o.style.left = S.ox + "%"; o.style.top = S.oy + "%"; };
-      o.onpointerup = () => { const m = o._d && o._d.m; o._d = null; if (!m) textEd(); };
+      let del = null; const getDel = create => { if (create && !del) { del = h("div", "sdel"); del.append(ic("trash")); g.append(del); } return del; };
+      if (S.rp) {
+        const card = repostSticker(S.rp, false);
+        attachSticker(card, S.rp, g, getDel, () => { S.rp = null; draw(); }, null);
+        g.append(card);
+      }
+      const o = ovl({ text: S.text || (S.md || S.rp ? "" : "Tap to write"), tc: S.tc, fs: S.fs, hl: S.hl, ox: S.ox, oy: S.oy, sc: S.scale });
+      attachSticker(o, S, g, getDel, () => { S.text = ""; S.ox = 50; S.oy = 50; S.scale = 1; draw(); }, textEd);
       g.append(o);
     };
     const textEd = () => {
@@ -2152,24 +2180,26 @@ function openStatusAdd() {
       ok.onclick = () => { S.text = ta.value.trim(); d.remove(); R.classList.remove("editing"); draw(); };
       d.append(ta, fr, cr, ok); g.append(d); sty(); drawF(); ta.focus();
     };
-    t.append(xb(() => { if (S.prev) URL.revokeObjectURL(S.prev); S.md = S.prev = null; pick(); }), sp, at);
+    t.append(xb(() => { if (S.prev) URL.revokeObjectURL(S.prev); S.md = S.prev = null; repost ? close() : pick(); }), sp, at);
     if (!S.md) { const bg = h("button", "ib"); bg.append(ic("wave")); bg.setAttribute("aria-label", "Change background"); bg.onclick = () => { S.c = (S.c + 1) % BG.length; draw(); }; t.append(bg); }
     at.onclick = textEd;
     const u = users[me.uid] || {}; pill.append(avatar(u.name, u.photo), document.createTextNode("Your story"));
     go.onclick = async () => {
-      if (!S.text && !S.md) { toast("Add something first"); setTimeout(() => toast(""), 1500); return; }
+      if (!S.text && !S.md && !S.rp) { toast("Add something first"); setTimeout(() => toast(""), 1500); return; }
       go.disabled = true; go.textContent = "Sharing…";
       try {
         const p = { text: S.text, c: S.c, media: S.md ? { url: S.md.url, kind: S.md.kind, poster: S.md.poster || null } : null, ts: serverTimestamp() };
-        if (S.text) Object.assign(p, { tc: S.tc, fs: S.fs, hl: S.hl, ox: Math.round(S.ox * 10) / 10, oy: Math.round(S.oy * 10) / 10 });
+        if (S.text) Object.assign(p, { tc: S.tc, fs: S.fs, hl: S.hl, ox: Math.round(S.ox * 10) / 10, oy: Math.round(S.oy * 10) / 10, sc: Math.round((S.scale || 1) * 100) / 100 });
+        if (S.rp) p.rp = { uid: S.rp.uid, sid: S.rp.sid, hid: S.rp.hid || null, media: S.rp.media || null, text: S.rp.text || "", c: S.rp.c | 0, tc: S.rp.tc || null, fs: S.rp.fs | 0, hl: S.rp.hl | 0, ox: Math.round(S.rp.ox * 10) / 10, oy: Math.round(S.rp.oy * 10) / 10, sc: Math.round((S.rp.scale || 1) * 100) / 100 };
         const r = push(ref(db, `stories/${me.uid}`)); await set(r, p);
         if (S.text) notifyMentions(S.text, "story", { sid: r.key });
+        if (S.rp) { try { const c = { id: S.rp.uid, type: "user" }, cid = chatId(c); await push(ref(db, `chats/${cid}/messages`), { from: me.uid, mention: "story-repost", sid: r.key, text: S.text || "", ts: serverTimestamp() }); await bump(c, cid); } catch (e) {} }
         close(); toast("Story shared"); setTimeout(() => toast(""), 1400);
       } catch (e) { go.disabled = false; go.textContent = "Share"; alert(e.message || e); }
     };
     st.append(g); bar.append(pill, go); R.append(t, st, bar); draw(); if (openText) textEd();
   };
-  pick();
+  if (repost) edit(false); else pick();
 }
 function renderStrip(S) {
   if (!me || !(S instanceof Element)) return; S.innerHTML = "";
@@ -2186,10 +2216,60 @@ function renderStrip(S) {
 /* ---------- share posts, photo adjust, story text ---------- */
 function ovl(o, onMention) {
   const e = h("div", "ov" + (o.fs ? " f" + o.fs : "") + (o.hl ? " hl" : "")), c = o.tc || "#ffffff", y = o.oy != null ? o.oy : [12, 50, 88][o.pos == null ? 2 : o.pos];
-  e.style.cssText = `left:${o.ox != null ? o.ox : 50}%;top:${y}%;transform:translate(-50%,-50%);color:${o.hl ? "#111" : c}` + (o.hl ? `;background:${c}` : "");
+  e.style.cssText = `left:${o.ox != null ? o.ox : 50}%;top:${y}%;transform:translate(-50%,-50%) scale(${o.sc || 1});color:${o.hl ? "#111" : c}` + (o.hl ? `;background:${c}` : "");
   if (!o.text) e.classList.add("hide");
   if (onMention) e.append(mentionFragClick(o.text, onMention)); else e.textContent = o.text || "";
   return e;
+}
+/* ---------- draggable / pinch-zoomable stickers (story text + reposted-story card), with drag-to-delete ---------- */
+function attachSticker(el, pos, g, getDel, onDelete, onTap) {
+  let ptrs = new Map(), pinch = null;
+  const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  el.onpointerdown = e => {
+    el.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (ptrs.size === 1) el._d = { x: e.clientX, y: e.clientY, m: 0 };
+    else if (ptrs.size === 2) { const pts = [...ptrs.values()]; pinch = { d0: dist(pts[0], pts[1]), s0: pos.scale || 1 }; el._d = null; }
+  };
+  el.onpointermove = e => {
+    if (!ptrs.has(e.pointerId)) return; ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (ptrs.size >= 2 && pinch) {
+      const pts = [...ptrs.values()], d = dist(pts[0], pts[1]);
+      pos.scale = Math.max(0.5, Math.min(3, pinch.s0 * (d / pinch.d0)));
+      el.style.transform = `translate(-50%,-50%) scale(${pos.scale})`; return;
+    }
+    if (!el._d) return;
+    if (Math.abs(e.clientX - el._d.x) + Math.abs(e.clientY - el._d.y) > 6) el._d.m = 1;
+    if (!el._d.m) return;
+    const del = getDel(true); del.classList.add("show");
+    const r = g.getBoundingClientRect();
+    pos.ox = Math.max(8, Math.min(92, (e.clientX - r.left) / r.width * 100));
+    pos.oy = Math.max(6, Math.min(94, (e.clientY - r.top) / r.height * 100));
+    el.style.left = pos.ox + "%"; el.style.top = pos.oy + "%";
+    const dr = del.getBoundingClientRect();
+    const ex = r.left + (pos.ox / 100) * r.width, ey = r.top + (pos.oy / 100) * r.height;
+    del.classList.toggle("over", dist({ x: ex, y: ey }, { x: dr.left + dr.width / 2, y: dr.top + dr.height / 2 }) < 46);
+  };
+  el.onpointerup = el.onpointercancel = e => {
+    ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null;
+    if (ptrs.size === 0) {
+      const m = el._d && el._d.m, del = getDel(false), hit = del && del.classList.contains("over"); el._d = null;
+      if (del) del.classList.remove("show", "over");
+      if (m && hit) { onDelete(); return; }
+      if (!m && onTap) onTap();
+    }
+  };
+}
+function repostSticker(rp, clickable) {
+  const card = h("div", "rpcard"), inner = h("div", "rpcard-in");
+  if (rp.media) inner.append(mEl(rp.media));
+  else { inner.style.background = BG[rp.c | 0]; if (rp.text) inner.append(h("div", "rpcard-tx", rp.text)); }
+  const u = users[rp.uid] || {}, who = h("div", "rpcard-who");
+  who.append(avatar(u.name, u.photo), h("span", "", u.name || "Bro"));
+  card.append(inner, who);
+  card.style.left = (rp.ox != null ? rp.ox : 50) + "%"; card.style.top = (rp.oy != null ? rp.oy : 40) + "%";
+  card.style.transform = `translate(-50%,-50%) scale(${rp.scale != null ? rp.scale : (rp.sc || 1)})`;
+  if (clickable) { card.classList.add("tap"); card.onclick = ev => { ev.stopPropagation(); closeStory(); openStoryById(rp.uid, rp.sid, rp.hid); }; }
+  return card;
 }
 function shareBub(pid) {
   const p = posts[pid], b = h("div", "bub shp");
