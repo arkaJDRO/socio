@@ -111,6 +111,14 @@ main{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(
 .rpcard-who{position:absolute;top:8px;left:8px;right:8px;display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:#fff;text-shadow:0 1px 4px #000}
 .rpcard-who .av{width:18px;height:18px;font-size:9px}
 .rpcard-who span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.adcard{position:absolute;width:38%;max-width:210px;min-width:70px;touch-action:none;user-select:none;cursor:grab;box-shadow:0 8px 24px #0008;background:#00000022;overflow:hidden}
+.adcard img{width:100%;display:block}
+.adcard.shape-free{border-radius:16px;border:2px solid #ffffff30}
+.adcard.shape-free img{height:auto;object-fit:contain}
+.adcard.shape-square{border-radius:16px;border:2px solid #ffffff30;aspect-ratio:1/1}
+.adcard.shape-square img{height:100%;object-fit:cover}
+.adcard.shape-circle{border-radius:50%;border:2px solid #ffffff40;aspect-ratio:1/1}
+.adcard.shape-circle img{height:100%;object-fit:cover}
 .bwrap{display:flex;flex-direction:column;max-width:100%}
 .swrow{position:relative;display:flex;touch-action:pan-y}
 .swarrow{position:absolute;left:-30px;top:50%;transform:translateY(-50%);opacity:0;color:var(--a);pointer-events:none;width:20px;height:20px}
@@ -231,8 +239,8 @@ textarea{font:inherit;font-size:16px;color:var(--txt);background:var(--in);borde
 .mention{color:var(--a);font-weight:600;cursor:pointer}
 .ov .mention{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:2px}
 .mention:hover{text-decoration:underline}
-.mdrop{position:fixed;z-index:60;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:4px;box-shadow:0 12px 32px #0008;max-height:230px;overflow-y:auto}
-.mdi{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:10px;cursor:pointer}
+.mdrop{position:fixed;z-index:60;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:4px;box-shadow:0 12px 32px #0008;max-height:230px;overflow-y:auto;touch-action:pan-y}
+.mdi{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:10px;cursor:pointer;touch-action:pan-y}
 .mdi.on,.mdi:hover{background:var(--panel2)}
 .mdi .av{width:26px;height:26px;font-size:11px;flex:none}
 .mdn{font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -541,6 +549,7 @@ const ICONS = {
   share: '<path d="M12 3v12"/><path d="M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/>',
   mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0"/><path d="M12 17.5V21"/><path d="M8.3 21h7.4"/>',
   camera: '<path d="M4 8h3l1.4-2h7.2L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.3" r="3.4"/>',
+  image: '<rect x="3.5" y="5" width="17" height="14" rx="2.5"/><circle cx="9" cy="10.2" r="1.6"/><path d="M4.2 16.8l4.4-4.3c.8-.8 1.9-.8 2.7 0l4.6 4.6M13.8 13.5l1.3-1.3c.8-.8 1.9-.8 2.7 0l2 2"/>',
   pin: '<path d="M12 21s6.5-6.9 6.5-11.2A6.5 6.5 0 0 0 5.5 9.8C5.5 14.1 12 21 12 21z"/><circle cx="12" cy="9.6" r="2.2"/>',
   trash: '<path d="M4.5 7h15"/><path d="M9.5 7V4.3h5V7"/><path d="M6.3 7l1 12.2a1 1 0 0 0 1 .8h7.4a1 1 0 0 0 1-.8L17.7 7"/>',
   edit: '<path d="M4 20h4L20 8l-4-4L4 16v4z"/>',
@@ -1630,7 +1639,10 @@ function mdRender() {
     a.style.cssText = "width:26px;height:26px;font-size:11px";
     row.append(a, h("span", "mdn", u.name || u.username || "user"), h("span", "mdu", "@" + mHandle(u)));
     row.onmousedown = e => { e.preventDefault(); mdPick(id, u); };
-    row.addEventListener("touchstart", e => { e.preventDefault(); mdPick(id, u); }, { passive: false });
+    let tsx = 0, tsy = 0, tmoved = false;
+    row.addEventListener("touchstart", e => { const p = e.touches[0]; tsx = p.clientX; tsy = p.clientY; tmoved = false; }, { passive: true });
+    row.addEventListener("touchmove", e => { const p = e.touches[0]; if (Math.abs(p.clientX - tsx) + Math.abs(p.clientY - tsy) > 8) tmoved = true; }, { passive: true });
+    row.addEventListener("touchend", e => { if (!tmoved) { e.preventDefault(); mdPick(id, u); } }, { passive: false });
     row.onmouseenter = () => { mdIdx = i; mdRender(); };
     mdrop.append(row);
   });
@@ -1974,8 +1986,8 @@ function showStory() {
     const wr = h("div", "swr"), e = document.createElement(t.media.kind === "video" ? "video" : "img");
     if (t.media.kind === "video") { e.playsInline = true; e.autoplay = true; e.onloadedmetadata = () => run(Math.min(30, e.duration || 10) * 1000, false); e.onended = nextStory; e.onerror = () => { clearTimeout(stm); stm = setTimeout(nextStory, 1500); }; e.onloadeddata = () => e.play().catch(() => { e.muted = true; e.play().catch(() => {}); }); }
     else { e.onload = () => run(5000, true); e.onerror = () => run(3000, true); }
-    setSrc(e, t.media.url); wr.append(e); if (t.rp) wr.append(repostSticker(t.rp, true)); if (t.text) wr.append(ovl(t, onMentionTap)); st.append(wr);
-  } else { st.style.background = BG[t.c | 0]; if (t.rp) st.append(repostSticker(t.rp, true)); st.append(t.oy == null ? h("div", "stt", t.text || "") : ovl(t, onMentionTap)); run(5000, true); }
+    setSrc(e, t.media.url); wr.append(e); if (t.rp) wr.append(repostSticker(t.rp, true)); (t.ads || (t.ad ? [t.ad] : [])).forEach(ad => wr.append(adSticker(ad))); if (t.text) wr.append(ovl(t, onMentionTap)); st.append(wr);
+  } else { st.style.background = BG[t.c | 0]; if (t.rp) st.append(repostSticker(t.rp, true)); (t.ads || (t.ad ? [t.ad] : [])).forEach(ad => st.append(adSticker(ad))); st.append(t.oy == null ? h("div", "stt", t.text || "") : ovl(t, onMentionTap)); run(5000, true); }
   let repostTagEl = null;
   if (t.rp) { const ru = users[t.rp.uid] || {}, rt = h("div", "repostTag"); rt.append(ic("reply", "sm"), document.createTextNode("Mention from " + (ru.name || "Bro"))); rt.onclick = ev => { ev.stopPropagation(); pauseStory(); closeStory(); openProfile(t.rp.uid, null); }; repostTagEl = rt; }
   const ft = h("div", "sft"); let mtagEl = null;
@@ -2075,7 +2087,7 @@ function storyBub(ss, replyMode) {
 }
 const OV_FONTS = ["Sans", "Serif", "Mono", "Neon"], OV_COLS = ["#ffffff", "#ffe066", "#ff8fb1", "#7cf5c4", "#7cc4ff", "#000000"];
 function openStatusAdd(repost) {
-  const S = { md: null, prev: null, mv: false, c: 0, text: "", tc: "#ffffff", fs: 0, hl: 0, ox: 50, oy: 50, scale: 1,
+  const S = { md: null, prev: null, mv: false, c: 0, text: "", tc: "#ffffff", fs: 0, hl: 0, ox: 50, oy: 50, scale: 1, ads: [],
     rp: repost ? { uid: repost.uid, sid: repost.sid, hid: repost.hid || null, media: repost.media || null, text: repost.text || "", c: repost.c | 0, tc: repost.tc, fs: repost.fs, hl: repost.hl, ox: 50, oy: 40, scale: 1 } : null
   }, R = $("#scr"); R.classList.remove("hide");
   const close = () => { if (S.stopCam) S.stopCam(); R.classList.remove("editing"); if (S.prev) URL.revokeObjectURL(S.prev); R.classList.add("hide"); R.innerHTML = ""; };
@@ -2154,8 +2166,19 @@ function openStatusAdd(repost) {
     startStream();
   };
   const edit = openText => {
-    R.innerHTML = ""; const t = h("div", "sct"), sp = h("div", "sp"), at = h("button", "ib", "Aa"), st = h("div", "scst"), g = h("div", "stg"), bar = h("div", "scb"), pill = h("div", "pill"), go = h("button", "go", "Share");
+    R.innerHTML = ""; const t = h("div", "sct"), sp = h("div", "sp"), ap = h("button", "ib"), at = h("button", "ib", "Aa"), st = h("div", "scst"), g = h("div", "stg"), bar = h("div", "scb"), pill = h("div", "pill"), go = h("button", "go", "Share");
+    ap.append(ic("image")); ap.setAttribute("aria-label", "Add photo");
     at.setAttribute("aria-label", "Add text");
+    const addAdPhoto = () => pickFiles("image/*", true, async fs => {
+      const files = [...fs].slice(0, Math.max(0, 8 - S.ads.length)); let added = 0;
+      for (const f of files) {
+        try { const media = await upload(f), n = S.ads.length; S.ads.push({ media, ox: 50 + (n % 3 - 1) * 12, oy: 58 + Math.floor(n / 3) * 14, scale: 1, shape: "free" }); added++; }
+        catch (e) { alert(e.message || e); }
+      }
+      draw();
+      if (added) { toast("Tap a photo to change its frame shape"); setTimeout(() => toast(""), 2200); }
+    });
+    ap.onclick = addAdPhoto;
     const draw = () => {
       g.innerHTML = ""; g.style.background = S.md ? "#000" : BG[S.c];
       if (S.md) { const e = document.createElement(S.mv ? "video" : "img"); e.src = S.prev; if (S.mv) { e.autoplay = e.muted = e.loop = e.playsInline = true; } g.append(e); }
@@ -2165,6 +2188,11 @@ function openStatusAdd(repost) {
         attachSticker(card, S.rp, g, getDel, () => { S.rp = null; draw(); }, null);
         g.append(card);
       }
+      S.ads.forEach(ad => {
+        const adEl = adSticker(ad);
+        attachSticker(adEl, ad, g, getDel, () => { S.ads.splice(S.ads.indexOf(ad), 1); draw(); }, () => { ad.shape = nextAdShape(ad.shape); draw(); });
+        g.append(adEl);
+      });
       const o = ovl({ text: S.text || (S.md || S.rp ? "" : "Tap to write"), tc: S.tc, fs: S.fs, hl: S.hl, ox: S.ox, oy: S.oy, sc: S.scale });
       attachSticker(o, S, g, getDel, () => { S.text = ""; S.ox = 50; S.oy = 50; S.scale = 1; draw(); }, textEd);
       g.append(o);
@@ -2180,17 +2208,18 @@ function openStatusAdd(repost) {
       ok.onclick = () => { S.text = ta.value.trim(); d.remove(); R.classList.remove("editing"); draw(); };
       d.append(ta, fr, cr, ok); g.append(d); sty(); drawF(); ta.focus();
     };
-    t.append(xb(() => { if (S.prev) URL.revokeObjectURL(S.prev); S.md = S.prev = null; repost ? close() : pick(); }), sp, at);
+    t.append(xb(() => { if (S.prev) URL.revokeObjectURL(S.prev); S.md = S.prev = null; repost ? close() : pick(); }), sp, ap, at);
     if (!S.md) { const bg = h("button", "ib"); bg.append(ic("wave")); bg.setAttribute("aria-label", "Change background"); bg.onclick = () => { S.c = (S.c + 1) % BG.length; draw(); }; t.append(bg); }
     at.onclick = textEd;
     const u = users[me.uid] || {}; pill.append(avatar(u.name, u.photo), document.createTextNode("Your story"));
     go.onclick = async () => {
-      if (!S.text && !S.md && !S.rp) { toast("Add something first"); setTimeout(() => toast(""), 1500); return; }
+      if (!S.text && !S.md && !S.rp && !S.ads.length) { toast("Add something first"); setTimeout(() => toast(""), 1500); return; }
       go.disabled = true; go.textContent = "Sharing…";
       try {
         const p = { text: S.text, c: S.c, media: S.md ? { url: S.md.url, kind: S.md.kind, poster: S.md.poster || null } : null, ts: serverTimestamp() };
         if (S.text) Object.assign(p, { tc: S.tc, fs: S.fs, hl: S.hl, ox: Math.round(S.ox * 10) / 10, oy: Math.round(S.oy * 10) / 10, sc: Math.round((S.scale || 1) * 100) / 100 });
         if (S.rp) p.rp = { uid: S.rp.uid, sid: S.rp.sid, hid: S.rp.hid || null, media: S.rp.media || null, text: S.rp.text || "", c: S.rp.c | 0, tc: S.rp.tc || null, fs: S.rp.fs | 0, hl: S.rp.hl | 0, ox: Math.round(S.rp.ox * 10) / 10, oy: Math.round(S.rp.oy * 10) / 10, sc: Math.round((S.rp.scale || 1) * 100) / 100 };
+        if (S.ads.length) p.ads = S.ads.map(ad => ({ media: ad.media, ox: Math.round(ad.ox * 10) / 10, oy: Math.round(ad.oy * 10) / 10, sc: Math.round((ad.scale || 1) * 100) / 100, shape: ad.shape || "free" }));
         const r = push(ref(db, `stories/${me.uid}`)); await set(r, p);
         if (S.text) notifyMentions(S.text, "story", { sid: r.key });
         if (S.rp) { try { const c = { id: S.rp.uid, type: "user" }, cid = chatId(c); await push(ref(db, `chats/${cid}/messages`), { from: me.uid, mention: "story-repost", sid: r.key, text: S.text || "", ts: serverTimestamp() }); await bump(c, cid); } catch (e) {} }
@@ -2269,6 +2298,15 @@ function repostSticker(rp, clickable) {
   card.style.left = (rp.ox != null ? rp.ox : 50) + "%"; card.style.top = (rp.oy != null ? rp.oy : 40) + "%";
   card.style.transform = `translate(-50%,-50%) scale(${rp.scale != null ? rp.scale : (rp.sc || 1)})`;
   if (clickable) { card.classList.add("tap"); card.onclick = ev => { ev.stopPropagation(); closeStory(); openStoryById(rp.uid, rp.sid, rp.hid); }; }
+  return card;
+}
+const AD_SHAPES = ["free", "square", "circle"];
+const nextAdShape = s => AD_SHAPES[(AD_SHAPES.indexOf(s) + 1) % AD_SHAPES.length];
+function adSticker(ad) {
+  const card = h("div", "adcard shape-" + (ad.shape || "free"));
+  if (ad.media) card.append(mEl(ad.media));
+  card.style.left = (ad.ox != null ? ad.ox : 50) + "%"; card.style.top = (ad.oy != null ? ad.oy : 65) + "%";
+  card.style.transform = `translate(-50%,-50%) scale(${ad.scale != null ? ad.scale : (ad.sc || 1)})`;
   return card;
 }
 function shareBub(pid) {
